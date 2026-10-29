@@ -1,0 +1,470 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Spinning Pendulum Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: two instrument panels (carousel | phase plane), a strip of three live traces, then two readout cards */
+:root{
+  --ink:#0a0f1c; --panel:#0f1729; --panel-2:#131d33; --line:#22304f; --fg:#e7eaf3; --muted:#8a96b3; --faint:#5a6684;
+  --amber:#f4b860; --teal:#56d4c4; --rose:#ff6f8e; --violet:#ab8cff; --cyan:#7cc6ff; --steel:#6f8fd6;
+  --display:"Newsreader", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+html,body{background:var(--ink);color:var(--fg)}
+body{font-family:var(--body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1300px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:6px;max-width:74ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:400;font-style:italic;font-size:clamp(30px,4.2vw,46px);line-height:1.05;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+header p{margin:0;color:var(--muted);font-size:15px}
+header p b{color:var(--fg);font-weight:500}
+
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:900px){.stage{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:var(--display);font-weight:500;font-size:20px;margin:0}
+.hint{font-size:12px;color:var(--muted)}
+.view{position:relative;width:100%;aspect-ratio:1/0.86;max-width:100%;touch-action:none;background:radial-gradient(120% 90% at 50% 35%,#16223d 0%,var(--panel) 70%)}
+#carouselView{cursor:grab}#carouselView:active{cursor:grabbing}
+#phaseView{cursor:crosshair}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mode-tag{position:absolute;right:12px;top:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--panel) 70%,transparent)}
+.mode-tag.run{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 45%,transparent)}
+.hud{position:absolute;left:12px;top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);pointer-events:none;display:grid;gap:2px}
+.hud b{color:var(--fg);font-weight:500}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 16px 12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.sw.line{border-radius:2px;height:3px;width:14px}
+.sw.ring{background:transparent;border:2px solid var(--rose)}
+
+.controls{display:grid;gap:12px;padding:14px 16px 16px;border-top:1px solid var(--line)}
+.sliders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}
+@media (max-width:520px){.sliders{grid-template-columns:1fr}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.field label output{font-family:var(--mono);color:var(--fg);font-variant-numeric:tabular-nums}
+.range-wrap{position:relative}
+input[type=range]{width:100%;accent-color:var(--amber);height:20px;margin:0}
+.crit{position:absolute;top:-3px;height:26px;width:2px;background:var(--rose);border-radius:1px;pointer-events:none;transform:translateX(-1px)}
+.crit-lbl{font-size:10.5px;color:var(--rose);font-family:var(--mono)}
+.buttons{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:13.5px;font-weight:500;padding:8px 16px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#1b1306}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tiny{font-size:11.5px;color:var(--faint)}
+
+.traces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:900px){.traces{grid-template-columns:1fr}}
+.trace{padding:12px 14px 10px;gap:6px}
+.trace h3,.card h3{margin:0;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.trace h3 small,.card h3 small{font-weight:400;color:var(--muted);font-size:12px}
+.trace canvas{width:100%;height:170px;display:block}
+.keys{display:flex;gap:14px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.keys span{display:flex;align-items:center;gap:6px}
+
+.cards{display:grid;grid-template-columns:1fr 1.2fr;gap:20px}
+@media (max-width:1000px){.cards{grid-template-columns:1fr}}
+.card{padding:14px 16px 16px;gap:12px}
+.verdict{font-family:var(--display);font-size:19px;line-height:1.3;margin:0;text-wrap:balance}
+.verdict i{font-style:italic}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;font-size:12.5px}
+.stats div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.stats span{color:var(--muted)}
+.stats b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.eq{font-family:var(--mono);font-size:12.5px;line-height:1.9;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;overflow-x:auto}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11.5px}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid}
+.pill.c{color:var(--teal);border-color:color-mix(in srgb,var(--teal) 50%,transparent)}
+.pill.s{color:var(--rose);border-color:color-mix(in srgb,var(--rose) 50%,transparent)}
+.pill.d{color:var(--muted);border-color:var(--line)}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.note b{color:var(--fg);font-weight:500}
+footer{font-size:12px;color:var(--faint)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ESE 2100 · Spinning pendulum and a pitchfork bifurcation</div>
+    <h1>Spinning Pendulum <em>Lab</em></h1>
+    <p>A pendulum hangs from the top-center of a merry-go-round and swings in a plane that turns with it. Below <b>ω<sub>c</sub> = √(g/L)</b> the bottom is a center. Above it, the bottom becomes a saddle and <b>two new centers</b> appear at θ* = ±arccos(g/(Lω²)).</p>
+  </header>
+
+  <section class="stage">
+    <div class="panel">
+      <div class="panel-head"><h2>The merry-go-round</h2><span class="hint">Drag to orbit the camera</span></div>
+      <div class="view" id="carouselView">
+        <canvas id="carCanvas"></canvas>
+        <div class="mode-tag" id="modeTag">At rest</div>
+        <div class="hud"><span>t = <b id="tOut">0.00</b> s</span><span>θ = <b id="thOut">0°</b></span></div>
+      </div>
+      <div class="controls">
+        <div class="sliders">
+          <div class="field">
+            <label for="omega">Spin rate ω <output id="omegaOut">4.20 rad/s</output></label>
+            <div class="range-wrap"><input id="omega" type="range" min="0" max="8" step="0.05" value="4.2"><i class="crit" id="critMark"></i></div>
+            <span class="crit-lbl" id="critLbl">ω<sub>c</sub> = 3.13 rad/s</span>
+          </div>
+          <div class="field"><label for="theta0">Starting angle θ₀ <output id="theta0Out">25°</output></label><input id="theta0" type="range" min="-179" max="179" step="1" value="25"><span class="tiny">Or click anywhere on the phase plane to launch from that (θ, v)</span></div>
+          <div class="field"><label for="v0">Starting velocity v₀ <output id="v0Out">0.00 rad/s</output></label><input id="v0" type="range" min="-15" max="15" step="0.05" value="0"></div>
+          <div class="field"><label for="fric">Friction γ <output id="fricOut">0.00 /s</output></label><input id="fric" type="range" min="0" max="1" step="0.01" value="0"></div>
+          <div class="field"><label for="len">Pendulum length L <output id="lenOut">1.00 m</output></label><input id="len" type="range" min="0.4" max="2.5" step="0.05" value="1"></div>
+          <div class="field"><label for="speed">Playback <output id="speedOut">0.50×</output></label><input id="speed" type="range" min="0.1" max="2" step="0.05" value="0.5"></div>
+        </div>
+        <div class="buttons">
+          <button class="btn primary" id="startBtn">Start spinning</button>
+          <button class="btn" id="pauseBtn">Pause</button>
+          <button class="btn" id="resetBtn">Reset</button>
+          <span class="tiny">ω can be dragged while it runs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Phase plane (θ, v)</h2><span class="hint" id="phaseHint">Level sets of H for the current ω</span></div>
+      <div class="view" id="phaseView">
+        <canvas id="phaseCanvas"></canvas>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--teal)"></i>center / sink</span>
+        <span><i class="sw ring"></i>saddle</span>
+        <span><i class="sw line" style="background:var(--rose)"></i>separatrix</span>
+        <span><i class="sw line" style="background:var(--steel)"></i>swings across both wells</span>
+        <span><i class="sw line" style="background:var(--violet)"></i>goes over the top</span>
+        <span><i class="sw" style="background:var(--amber)"></i>your pendulum</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="traces">
+    <div class="panel trace">
+      <h3>Bifurcation diagram <small>equilibrium θ* vs ω</small></h3>
+      <canvas id="chB"></canvas>
+      <div class="keys"><span><i class="sw line" style="background:var(--teal)"></i>stable</span><span><i class="sw line" style="background:var(--rose)"></i>unstable</span><span><i class="sw line" style="background:var(--amber)"></i>now</span></div>
+    </div>
+    <div class="panel trace">
+      <h3>Effective potential <small>V(θ) = −(g/L)cos θ − (ω²/2)sin² θ</small></h3>
+      <canvas id="chV"></canvas>
+      <div class="keys"><span>Dashed line is the current H. The ball cannot rise above it.</span></div>
+    </div>
+    <div class="panel trace">
+      <h3>Pendulum angle <small>θ(t), wrapped to ±180°</small></h3>
+      <canvas id="chT"></canvas>
+      <div class="keys"><span><i class="sw line" style="background:var(--amber)"></i>θ</span><span><i class="sw line" style="background:var(--teal)"></i>±θ* (when it exists)</span></div>
+    </div>
+  </section>
+
+  <section class="cards">
+    <div class="panel card">
+      <h3>Your pendulum <small id="stateTag">at rest</small></h3>
+      <p class="verdict" id="verdict">–</p>
+      <div class="stats">
+        <div><span>ω / ω<sub>c</sub></span><b id="sRatio">–</b></div>
+        <div><span>θ*</span><b id="sStar">–</b></div>
+        <div><span>θ, v</span><b id="sTV">–</b></div>
+        <div><span>H</span><b id="sH">–</b></div>
+      </div>
+      <p class="note">H = v²/2 − (g/L)cos θ − (ω²/2)sin² θ is conserved when γ = 0, so every orbit stays on one contour of the phase plane. With friction, H drains away and the pendulum settles into a well.</p>
+    </div>
+    <div class="panel card">
+      <h3>Linearization <small>[DF] at each equilibrium</small></h3>
+      <div class="eq">dθ/dt = v<br>dv/dt = ω² sin θ cos θ − (g/L) sin θ − γv<br>[DF] = [ 0 , 1 ; ω²cos 2θ − (g/L)cos θ , −γ ]</div>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Equilibrium</th><th>Tr</th><th>Det</th><th>Type</th></tr></thead>
+        <tbody id="linBody"></tbody>
+      </table></div>
+      <p class="note" id="linNote">Tr = −γ. With γ = 0 the sign of Det decides: Det &gt; 0 is a center, Det &lt; 0 a saddle. At ω = ω<sub>c</sub>, Det at θ = 0 passes through zero: the pitchfork.</p>
+    </div>
+  </section>
+  <footer>Model from the textbook's spinning pendulum section: frictionless pivot, plane of swing turning at constant ω, g = 9.81 m/s². RK4 integration.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+function startLab(){
+const C={amber:'#f4b860',teal:'#56d4c4',rose:'#ff6f8e',violet:'#ab8cff',cyan:'#7cc6ff',steel:'#6f8fd6',line:'#22304f',muted:'#8a96b3',faint:'#5a6684',fg:'#e7eaf3',panel:'#0f1729'};
+const $=s=>document.querySelector(s);
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const G=9.81, WMAX=8;
+const TAU=Math.PI*2;
+const wrap=a=>{a=(a+Math.PI)%TAU;if(a<0)a+=TAU;return a-Math.PI;};
+const deg=a=>(a*180/Math.PI);
+
+/* ---------- state ---------- */
+const S={w:4.2,th0:25*Math.PI/180,gam:0,L:1,speed:0.5,v0:0,mode:'rest',paused:false,th:25*Math.PI/180,v:0,phi:0,t:0,hist:[],trail:[]};
+const k=()=>G/S.L;
+const wc=()=>Math.sqrt(k());
+function acc(th,v){return S.w*S.w*Math.sin(th)*Math.cos(th)-k()*Math.sin(th)-S.gam*v;}
+function rk4(th,v,h){const a1=v,b1=acc(th,v),a2=v+.5*h*b1,b2=acc(th+.5*h*a1,v+.5*h*b1),a3=v+.5*h*b2,b3=acc(th+.5*h*a2,v+.5*h*b2),a4=v+h*b3,b4=acc(th+h*a3,v+h*b3);
+  return[th+h/6*(a1+2*a2+2*a3+a4),v+h/6*(b1+2*b2+2*b3+b4)];}
+const Hf=(th,v)=>.5*v*v-k()*Math.cos(th)-.5*S.w*S.w*Math.sin(th)**2;
+const thStar=()=>S.w*S.w>k()?Math.acos(k()/(S.w*S.w)):null;
+function vmax(){const kk=k();return 1.12*Math.sqrt(2*(kk+kk*kk/(2*WMAX*WMAX)+WMAX*WMAX/2));}
+
+/* =========================================================
+   3D CAROUSEL
+   ========================================================= */
+const car=$('#carCanvas');
+const R3=new THREE.WebGLRenderer({canvas:car,antialias:true,alpha:true});R3.setPixelRatio(Math.min(devicePixelRatio,2));R3.outputEncoding=THREE.sRGBEncoding;R3.toneMapping=THREE.ACESFilmicToneMapping;
+const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,1,0.1,200);
+const orbit={az:0.55,el:0.42,dist:15.5,target:new THREE.Vector3(0,2.6,0),last:-1e9};
+function placeCam(){cam.position.set(orbit.target.x+orbit.dist*Math.cos(orbit.el)*Math.sin(orbit.az),orbit.target.y+orbit.dist*Math.sin(orbit.el),orbit.target.z+orbit.dist*Math.cos(orbit.el)*Math.cos(orbit.az));cam.lookAt(orbit.target);}
+sc.add(new THREE.HemisphereLight(0xaab9ff,0x1b140e,0.8));
+const key=new THREE.DirectionalLight(0xfff1dd,1.2);key.position.set(6,10,7);sc.add(key);
+const rim=new THREE.DirectionalLight(0x7cc6ff,0.5);rim.position.set(-8,4,-6);sc.add(rim);
+const grid=new THREE.GridHelper(30,40,0x2c3b60,0x1a2440);grid.material.transparent=true;grid.material.opacity=0.6;sc.add(grid);
+function tex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;}
+(function(){const t=tex(256,256,(g)=>{const r=g.createRadialGradient(128,128,10,128,128,128);r.addColorStop(0,'rgba(0,0,0,0.6)');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,256,256);});
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=0.01;sc.add(m);})();
+
+const carousel=new THREE.Group();sc.add(carousel);
+const deckTop=tex(1024,1024,(g,w,h)=>{const cx=w/2,cy=h/2,R=w/2;const n=16;
+  for(let i=0;i<n;i++){g.beginPath();g.moveTo(cx,cy);g.arc(cx,cy,R,i/n*TAU,(i+1)/n*TAU);g.closePath();g.fillStyle=i%2?'#1c2846':'#273760';g.fill();}
+  g.strokeStyle='#d9ae63';g.lineWidth=14;g.beginPath();g.arc(cx,cy,R-10,0,TAU);g.stroke();
+  g.lineWidth=4;g.beginPath();g.arc(cx,cy,R*0.62,0,TAU);g.stroke();
+  g.fillStyle='#f4b860';g.beginPath();g.moveTo(cx+R*0.86,cy);g.lineTo(cx+R*0.72,cy-26);g.lineTo(cx+R*0.72,cy+26);g.fill(); // marker so rotation reads
+  g.fillStyle='#d9ae63';g.beginPath();g.arc(cx,cy,30,0,TAU);g.fill();});
+const deckSide=new THREE.MeshStandardMaterial({color:0x3a2a22,roughness:0.6,metalness:0.3});
+const deck=new THREE.Mesh(new THREE.CylinderGeometry(3.1,3.1,0.28,96),[deckSide,new THREE.MeshStandardMaterial({map:deckTop,roughness:0.7}),deckSide]);deck.position.y=0.14;carousel.add(deck);
+const brass=new THREE.MeshStandardMaterial({color:0xd9ae63,roughness:0.35,metalness:0.75});
+const frameMat=new THREE.MeshStandardMaterial({color:0xd9ae63,roughness:0.4,metalness:0.6,transparent:true,opacity:0.45,depthWrite:false});
+const POSTR=2.8,POSTH=4.1,PIV=new THREE.Vector3(0,5.0,0),LV=3.1;
+for(let i=0;i<3;i++){const a=Math.PI/2+i/3*TAU;const p=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,POSTH-0.28,10),frameMat);p.position.set(POSTR*Math.cos(a),0.28+(POSTH-0.28)/2,POSTR*Math.sin(a));carousel.add(p);
+  const top=new THREE.Vector3(POSTR*Math.cos(a),POSTH,POSTR*Math.sin(a));const d=new THREE.Vector3().subVectors(PIV,top);const len=d.length();
+  const sp=new THREE.Mesh(new THREE.CylinderGeometry(0.016,0.016,len,8),frameMat);sp.position.copy(top).addScaledVector(d,0.5);sp.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());carousel.add(sp);}
+
+const hub=new THREE.Mesh(new THREE.SphereGeometry(0.16,24,16),brass);hub.position.copy(PIV);carousel.add(hub);
+
+// swing plane + pendulum, in carousel's local x–y plane through the pivot
+const swing=new THREE.Group();swing.position.copy(PIV);carousel.add(swing);
+const disc=new THREE.Mesh(new THREE.CircleGeometry(LV,96),new THREE.MeshBasicMaterial({color:0x7cc6ff,transparent:true,opacity:0.07,side:THREE.DoubleSide,depthWrite:false}));swing.add(disc);
+const discEdge=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({length:128},(_,i)=>new THREE.Vector3(LV*Math.cos(i/128*TAU),LV*Math.sin(i/128*TAU),0))),new THREE.LineBasicMaterial({color:0x7cc6ff,transparent:true,opacity:0.3}));swing.add(discEdge);
+const plumb=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,-LV,0)]),new THREE.LineDashedMaterial({color:0xc6d0e8,dashSize:0.14,gapSize:0.1,transparent:true,opacity:0.55}));plumb.computeLineDistances();swing.add(plumb);
+const arcGeo=new THREE.BufferGeometry();arcGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(65*3),3));const arc=new THREE.Line(arcGeo,new THREE.LineBasicMaterial({color:0xf4b860}));swing.add(arc);
+const rodG=new THREE.CylinderGeometry(0.035,0.035,LV,12);rodG.translate(0,-LV/2,0);
+const pend=new THREE.Group();swing.add(pend);
+pend.add(new THREE.Mesh(rodG,new THREE.MeshStandardMaterial({color:0xc6d0e8,roughness:0.3,metalness:0.8})));
+const bob=new THREE.Mesh(new THREE.SphereGeometry(0.26,32,24),new THREE.MeshStandardMaterial({color:0xf4b860,emissive:0xf4b860,emissiveIntensity:0.45,roughness:0.3,metalness:0.2}));bob.position.y=-LV;pend.add(bob);
+
+// spin direction arrow on the floor (static)
+(function(){const m=new THREE.MeshBasicMaterial({color:0x7cc6ff,transparent:true,opacity:0.75});const Ra=3.6,end=1.25*Math.PI;
+  const t=new THREE.Mesh(new THREE.TorusGeometry(Ra,0.035,8,96,end),m);t.rotation.x=-Math.PI/2;t.position.y=0.04;sc.add(t);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.36,16),m);cone.position.set(Ra*Math.cos(end),0.04,-Ra*Math.sin(end));
+  cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(-Math.sin(end),0,-Math.cos(end)));sc.add(cone);})();
+
+// world-space trail of the bob
+const TN=700;const tPos=new Float32Array(TN*3),tCol=new Float32Array(TN*3);
+const tGeo=new THREE.BufferGeometry();tGeo.setAttribute('position',new THREE.BufferAttribute(tPos,3));tGeo.setAttribute('color',new THREE.BufferAttribute(tCol,3));
+sc.add(new THREE.Line(tGeo,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})));
+let ring3=[];const amberC=new THREE.Color(0xf4b860);
+function pushTrail3(p){ring3.push(p.clone());if(ring3.length>TN)ring3.shift();const n=ring3.length;
+  for(let i=0;i<n;i++){const v=ring3[i];tPos.set([v.x,v.y,v.z],i*3);const a=Math.pow((i+1)/n,1.4)*0.9;tCol.set([amberC.r*a,amberC.g*a,amberC.b*a],i*3);}
+  tGeo.setDrawRange(0,n);tGeo.attributes.position.needsUpdate=true;tGeo.attributes.color.needsUpdate=true;}
+function clearTrail3(){ring3=[];tGeo.setDrawRange(0,0);}
+
+function setPendulum(th){pend.rotation.z=th; // rotation about local z moves bob from -y toward +x for th>0
+  const pa=arcGeo.attributes.position.array;const r=0.85;for(let i=0;i<=64;i++){const a=th*i/64;pa[i*3]=r*Math.sin(a);pa[i*3+1]=-r*Math.cos(a);pa[i*3+2]=0;}arcGeo.attributes.position.needsUpdate=true;}
+
+(function(){const el=$('#carouselView');let d=null;
+  el.addEventListener('pointerdown',e=>{d={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!d)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;d={x:e.clientX,y:e.clientY};orbit.az-=dx*0.008;orbit.el=Math.max(0.05,Math.min(1.35,orbit.el+dy*0.008));orbit.last=performance.now();placeCam();});
+  const end=()=>{d=null;};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);})();
+
+/* =========================================================
+   PHASE PLANE
+   ========================================================= */
+const pc=$('#phaseCanvas');const cache=document.createElement('canvas');let dirty=true;
+let PW=1,PH=1,DPR=1;const pad={l:46,r:14,t:16,b:34};
+const xp=th=>pad.l+(th+Math.PI)/TAU*(PW-pad.l-pad.r);
+const yp=v=>pad.t+(1-(v+vmax())/(2*vmax()))*(PH-pad.t-pad.b);
+function sizePhase(){const r=pc.parentElement.getBoundingClientRect();DPR=Math.min(devicePixelRatio,2);PW=Math.max(1,r.width);PH=Math.max(1,r.height);
+  pc.width=Math.round(PW*DPR);pc.height=Math.round(PH*DPR);cache.width=pc.width;cache.height=pc.height;dirty=true;}
+
+function contour(g,F,nx,ny,x0,x1,y0,y1,level){ // marching squares on a precomputed grid F[j*(nx+1)+i]
+  const dx=(x1-x0)/nx,dy=(y1-y0)/ny;g.beginPath();
+  const ip=(a,b)=>(level-a)/(b-a);
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+    const f00=F[j*(nx+1)+i],f10=F[j*(nx+1)+i+1],f01=F[(j+1)*(nx+1)+i],f11=F[(j+1)*(nx+1)+i+1];
+    const c=(f00>level?1:0)|(f10>level?2:0)|(f11>level?4:0)|(f01>level?8:0);if(c===0||c===15)continue;
+    const X=x0+i*dx,Y=y0+j*dy;
+    const eB=[X+ip(f00,f10)*dx,Y],eR=[X+dx,Y+ip(f10,f11)*dy],eT=[X+ip(f01,f11)*dx,Y+dy],eL=[X,Y+ip(f00,f01)*dy];
+    const seg=(a,b)=>{g.moveTo(xp(a[0]),yp(a[1]));g.lineTo(xp(b[0]),yp(b[1]));};
+    switch(c){case 1:case 14:seg(eL,eB);break;case 2:case 13:seg(eB,eR);break;case 3:case 12:seg(eL,eR);break;case 4:case 11:seg(eR,eT);break;
+      case 5:seg(eL,eT);seg(eB,eR);break;case 6:case 9:seg(eB,eT);break;case 7:case 8:seg(eL,eT);break;case 10:seg(eL,eB);seg(eR,eT);break;}}
+}
+function drawStatic(){const g=cache.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);g.clearRect(0,0,PW,PH);
+  const VM=vmax();const x0=-Math.PI,x1=Math.PI;
+  // plot background
+  const bg=g.createRadialGradient(xp(0),yp(0),10,xp(0),yp(0),Math.max(PW,PH)*0.7);bg.addColorStop(0,'rgba(40,60,110,0.22)');bg.addColorStop(1,'rgba(15,23,41,0)');
+  g.fillStyle=bg;g.fillRect(pad.l,pad.t,PW-pad.l-pad.r,PH-pad.t-pad.b);
+  // grid
+  g.strokeStyle=C.line;g.lineWidth=1;g.font='11px "IBM Plex Mono", ui-monospace, monospace';g.fillStyle=C.muted;
+  const thT=[[-Math.PI,'−π'],[-Math.PI/2,'−π/2'],[0,'0'],[Math.PI/2,'π/2'],[Math.PI,'π']];
+  g.textAlign='center';g.textBaseline='top';
+  for(const [t,l] of thT){g.beginPath();g.moveTo(xp(t),pad.t);g.lineTo(xp(t),PH-pad.b);g.stroke();g.fillText(l,xp(t),PH-pad.b+6);}
+  const step=VM>12?5:VM>6?4:2;g.textAlign='right';g.textBaseline='middle';
+  for(let v=-Math.floor(VM/step)*step;v<=VM;v+=step){g.beginPath();g.moveTo(pad.l,yp(v));g.lineTo(PW-pad.r,yp(v));g.stroke();g.fillText(String(v),pad.l-6,yp(v));}
+  g.save();g.translate(12,pad.t+(PH-pad.t-pad.b)/2);g.rotate(-Math.PI/2);g.textAlign='center';g.fillStyle=C.muted;g.font='12px "IBM Plex Sans", system-ui, sans-serif';g.fillText('v = dθ/dt  (rad/s)',0,0);g.restore();
+  g.textAlign='right';g.textBaseline='bottom';g.fillText('θ',PW-pad.r-4,PH-pad.b-4);
+  // seam
+  g.setLineDash([4,4]);g.strokeStyle='rgba(255,111,142,0.35)';for(const t of[-Math.PI,Math.PI]){g.beginPath();g.moveTo(xp(t),pad.t);g.lineTo(xp(t),PH-pad.b);g.stroke();}g.setLineDash([]);
+  // vector field
+  g.save();g.beginPath();g.rect(pad.l,pad.t,PW-pad.l-pad.r,PH-pad.t-pad.b);g.clip();
+  const nxA=26,nyA=18;g.strokeStyle='rgba(138,150,179,0.22)';g.fillStyle='rgba(138,150,179,0.22)';g.lineWidth=1;
+  for(let i=0;i<nxA;i++)for(let j=0;j<nyA;j++){const th=x0+(i+.5)/nxA*TAU,v=-VM+(j+.5)/nyA*2*VM;
+    const dX=v/TAU*(PW-pad.l-pad.r),dY=-acc(th,v)/(2*VM)*(PH-pad.t-pad.b);const m=Math.hypot(dX,dY);if(m<1e-6)continue;
+    const L=9,ux=dX/m*L,uy=dY/m*L,cx=xp(th),cy=yp(v);g.beginPath();g.moveTo(cx-ux/2,cy-uy/2);g.lineTo(cx+ux/2,cy+uy/2);g.stroke();
+    g.beginPath();g.moveTo(cx+ux/2,cy+uy/2);g.lineTo(cx+ux/2-ux*0.35-uy*0.25,cy+uy/2-uy*0.35+ux*0.25);g.lineTo(cx+ux/2-ux*0.35+uy*0.25,cy+uy/2-uy*0.35-ux*0.25);g.fill();}
+  // H grid
+  const nx=320,ny=240;const F=new Float32Array((nx+1)*(ny+1));
+  for(let j=0;j<=ny;j++){const v=-VM+j/ny*2*VM;for(let i=0;i<=nx;i++){const th=x0+i/nx*TAU;F[j*(nx+1)+i]=Hf(th,v);}}
+  const kk=k(),w2=S.w*S.w,split=w2>kk;
+  const Hpi=kk,H0=-kk,Hmin=split?(-kk*kk/(2*w2)-w2/2):-kk;
+  const Hin=split?H0:Hpi;const Htop=.5*VM*VM-kk; // roughly the window edge
+  const draw=(lv,color,w,alpha)=>{g.globalAlpha=alpha;g.strokeStyle=color;g.lineWidth=w;g.shadowColor=color;g.shadowBlur=w>1.5?8:4;contour(g,F,nx,ny,x0,x1,-VM,VM,lv);g.stroke();g.shadowBlur=0;g.globalAlpha=1;};
+  for(const f of[0.04,0.13,0.25,0.39,0.54,0.7,0.86])draw(Hmin+(Hin-Hmin)*f,C.teal,1.1,0.75);
+  if(split)for(const f of[0.22,0.5,0.78])draw(H0+(Hpi-H0)*f,C.steel,1.1,0.7);
+  const span=Math.max(1,Htop-Hpi);for(const f of[0.06,0.18,0.34,0.52,0.72,0.92])draw(Hpi+span*f,C.violet,1,0.55);
+  draw(Hpi,C.rose,1.8,0.95);if(split)draw(H0,C.rose,1.8,0.95);
+  g.restore();
+  dirty=false;}
+
+function eqList(){const kk=k(),w2=S.w*S.w;const L=[{th:0},{th:Math.PI}];const ts=thStar();if(ts!==null&&ts>1e-3){L.push({th:ts},{th:-ts});}
+  return L.map(e=>{const a=w2*Math.cos(2*e.th)-kk*Math.cos(e.th);const det=-a,tr=-S.gam;let type;
+    if(Math.abs(det)<1e-6)type='degenerate';else if(det<0)type='saddle';else if(S.gam===0)type='center';else type=(tr*tr<4*det)?'spiral sink':'sink';return{...e,det,tr,type};});}
+
+const PT=[];const PTN=1100;
+function drawPhase(){if(dirty)drawStatic();const g=pc.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,pc.width,pc.height);g.drawImage(cache,0,0);g.setTransform(DPR,0,0,DPR,0,0);
+  g.save();g.beginPath();g.rect(pad.l,pad.t,PW-pad.l-pad.r,PH-pad.t-pad.b);g.clip();
+  // trail
+  g.lineCap='round';
+  for(let i=1;i<PT.length;i++){const a=PT[i-1],b=PT[i];if(Math.abs(a[0]-b[0])>Math.PI)continue;const al=Math.pow(i/PT.length,1.5);
+    g.strokeStyle=`rgba(244,184,96,${0.85*al})`;g.lineWidth=0.8+2*al;g.beginPath();g.moveTo(xp(a[0]),yp(a[1]));g.lineTo(xp(b[0]),yp(b[1]));g.stroke();}
+  g.restore();
+  // equilibria
+  for(const e of eqList()){const xs=e.th===Math.PI?[xp(-Math.PI),xp(Math.PI)]:[xp(e.th)];for(const x of xs){const y=yp(0);
+    if(e.type==='saddle'){g.strokeStyle=C.rose;g.lineWidth=2.2;g.fillStyle=C.panel;g.beginPath();g.arc(x,y,6,0,TAU);g.fill();g.stroke();}
+    else if(e.type==='degenerate'){g.fillStyle=C.muted;g.beginPath();g.arc(x,y,5,0,TAU);g.fill();}
+    else{const gr=g.createRadialGradient(x,y,0,x,y,16);gr.addColorStop(0,'rgba(86,212,196,0.55)');gr.addColorStop(1,'rgba(86,212,196,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,16,0,TAU);g.fill();g.fillStyle=C.teal;g.beginPath();g.arc(x,y,5,0,TAU);g.fill();}}}
+  // head
+  const th=wrap(S.th),x=xp(th),y=yp(Math.max(-vmax(),Math.min(vmax(),S.v)));
+  const gr=g.createRadialGradient(x,y,0,x,y,22);gr.addColorStop(0,'rgba(244,184,96,0.75)');gr.addColorStop(1,'rgba(244,184,96,0)');g.fillStyle=gr;g.beginPath();g.arc(x,y,22,0,TAU);g.fill();
+  g.fillStyle='#fff3dc';g.beginPath();g.arc(x,y,4.5,0,TAU);g.fill();
+  // caption
+  g.font='11px "IBM Plex Mono", ui-monospace, monospace';g.fillStyle=C.muted;g.textAlign='left';g.textBaseline='top';
+  g.fillText(`ω = ${S.w.toFixed(2)}   ω/ω_c = ${(S.w/wc()).toFixed(2)}`,pad.l+8,pad.t+6);
+  g.fillStyle='rgba(255,111,142,0.7)';g.textAlign='right';g.fillText('θ = ±π are the same point',PW-pad.r-8,pad.t+6);}
+
+$('#phaseView').addEventListener('click',e=>{const r=pc.getBoundingClientRect();const th=(e.clientX-r.left-pad.l)/(PW-pad.l-pad.r)*TAU-Math.PI;
+  const fy=(e.clientY-r.top-pad.t)/(PH-pad.t-pad.b);if(th<-Math.PI||th>Math.PI||fy<0||fy>1)return;const VM=vmax();const v=2*VM*(1-fy)-VM;
+  S.th0=th;S.v0=v;$('#theta0').value=Math.round(deg(th));$('#theta0Out').textContent=Math.round(deg(th))+'°';
+  $('#v0').value=Math.max(-15,Math.min(15,v));$('#v0Out').textContent=v.toFixed(2)+' rad/s';start();});
+
+/* ---------- charts ---------- */
+function prep(cv){const dpr=Math.min(devicePixelRatio,2);const r=cv.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);return{g,w,h};}
+function axesY(g,w,ticks,yp,pl,pr){g.font='10px "IBM Plex Mono", ui-monospace, monospace';g.textAlign='right';g.textBaseline='middle';
+  for(const [v,l] of ticks){g.strokeStyle=C.line;g.lineWidth=1;g.beginPath();g.moveTo(pl,yp(v));g.lineTo(w-pr,yp(v));g.stroke();g.fillStyle=C.muted;g.fillText(l,pl-6,yp(v));}}
+const PIT=[[-Math.PI,'−π'],[0,'0'],[Math.PI,'π']];
+function drawBif(){const {g,w,h}=prep($('#chB'));const pl=30,pr=8,pt=8,pb=20;const X=o=>pl+o/WMAX*(w-pl-pr),Y=t=>pt+(1-(t+Math.PI)/TAU)*(h-pt-pb);
+  axesY(g,w,PIT,Y,pl,pr);g.fillStyle=C.faint;g.textAlign='center';g.textBaseline='alphabetic';for(let o=0;o<=WMAX;o+=2)g.fillText(String(o),X(o),h-4);
+  const W=wc(),kk=k();
+  const line=(pts,color,dash,wd)=>{g.setLineDash(dash);g.strokeStyle=color;g.lineWidth=wd;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();g.setLineDash([]);};
+  line([[0,Math.PI],[WMAX,Math.PI]],C.rose,[5,4],1.6);line([[0,-Math.PI],[WMAX,-Math.PI]],C.rose,[5,4],1.6);
+  line([[0,0],[Math.min(W,WMAX),0]],C.teal,[],2.2);if(W<WMAX)line([[W,0],[WMAX,0]],C.rose,[5,4],1.6);
+  if(W<WMAX)for(const s of[1,-1]){const pts=[];for(let i=0;i<=120;i++){const o=W+(WMAX-W)*i/120;pts.push([o,s*Math.acos(Math.min(1,kk/(o*o)))]);}line(pts,C.teal,[],2.2);}
+  if(W<WMAX){g.fillStyle=C.rose;g.beginPath();g.arc(X(W),Y(0),3.5,0,TAU);g.fill();g.font='10px "IBM Plex Mono", ui-monospace, monospace';g.textAlign='left';g.fillText('ω_c',X(W)+5,Y(0)+13);}
+  g.strokeStyle='rgba(244,184,96,0.6)';g.lineWidth=1;g.beginPath();g.moveTo(X(S.w),pt);g.lineTo(X(S.w),h-pb);g.stroke();
+  const th=wrap(S.th);g.fillStyle=C.amber;g.shadowColor=C.amber;g.shadowBlur=10;g.beginPath();g.arc(X(S.w),Y(th),4.5,0,TAU);g.fill();g.shadowBlur=0;}
+function drawPot(){const {g,w,h}=prep($('#chV'));const pl=30,pr=8,pt=10,pb=20;const kk=k(),w2=S.w*S.w;const V=t=>-kk*Math.cos(t)-.5*w2*Math.sin(t)**2;
+  let lo=Infinity,hi=-Infinity;for(let i=0;i<=200;i++){const v=V(-Math.PI+i/200*TAU);lo=Math.min(lo,v);hi=Math.max(hi,v);}const pd=(hi-lo)*0.15+0.5;lo-=pd;hi+=pd;
+  const X=t=>pl+(t+Math.PI)/TAU*(w-pl-pr),Y=v=>pt+(1-(v-lo)/(hi-lo))*(h-pt-pb);
+  g.font='10px "IBM Plex Mono", ui-monospace, monospace';g.fillStyle=C.faint;g.textAlign='center';g.textBaseline='alphabetic';
+  for(const [t,l] of[[-Math.PI,'−π'],[-Math.PI/2,'−π/2'],[0,'0'],[Math.PI/2,'π/2'],[Math.PI,'π']]){g.strokeStyle=C.line;g.beginPath();g.moveTo(X(t),pt);g.lineTo(X(t),h-pb);g.stroke();g.fillText(l,X(t),h-4);}
+  const grd=g.createLinearGradient(0,pt,0,h-pb);grd.addColorStop(0,'rgba(171,140,255,0.0)');grd.addColorStop(1,'rgba(86,212,196,0.18)');
+  g.beginPath();for(let i=0;i<=240;i++){const t=-Math.PI+i/240*TAU;i?g.lineTo(X(t),Y(V(t))):g.moveTo(X(t),Y(V(t)));}
+  g.strokeStyle=C.fg;g.lineWidth=1.8;g.stroke();g.lineTo(X(Math.PI),h-pb);g.lineTo(X(-Math.PI),h-pb);g.closePath();g.fillStyle=grd;g.fill();
+  const H=Hf(S.th,S.v);if(H<hi){g.setLineDash([5,4]);g.strokeStyle='rgba(244,184,96,0.7)';g.lineWidth=1.2;g.beginPath();g.moveTo(pl,Y(H));g.lineTo(w-pr,Y(H));g.stroke();g.setLineDash([]);}
+  const th=wrap(S.th);g.fillStyle=C.amber;g.shadowColor=C.amber;g.shadowBlur=12;g.beginPath();g.arc(X(th),Y(V(th))-6,6,0,TAU);g.fill();g.shadowBlur=0;}
+const TW=15;
+function drawTh(){const {g,w,h}=prep($('#chT'));const pl=30,pr=8,pt=8,pb=20;const tEnd=Math.max(TW,S.t),t0=tEnd-TW;
+  const X=t=>pl+(t-t0)/TW*(w-pl-pr),Y=a=>pt+(1-(a+Math.PI)/TAU)*(h-pt-pb);axesY(g,w,PIT,Y,pl,pr);
+  g.fillStyle=C.faint;g.font='10px "IBM Plex Mono", ui-monospace, monospace';g.textAlign='center';g.textBaseline='alphabetic';for(let s=Math.ceil(t0/3)*3;s<=tEnd;s+=3)g.fillText(s+'s',X(s),h-4);
+  const ts=thStar();if(ts!==null){g.setLineDash([4,4]);g.strokeStyle='rgba(86,212,196,0.6)';for(const s of[1,-1]){g.beginPath();g.moveTo(pl,Y(s*ts));g.lineTo(w-pr,Y(s*ts));g.stroke();}g.setLineDash([]);}
+  if(!S.hist.length){g.fillStyle=C.muted;g.font='12px "IBM Plex Sans", system-ui, sans-serif';g.textBaseline='middle';g.fillText('Start spinning to record',pl+(w-pl-pr)/2,pt+(h-pt-pb)/2);return;}
+  g.strokeStyle=C.amber;g.lineWidth=1.6;g.beginPath();let prev=null;
+  for(const p of S.hist){if(p.t<t0)continue;const x=X(p.t),y=Y(p.th);if(prev===null||Math.abs(p.th-prev)>Math.PI)g.moveTo(x,y);else g.lineTo(x,y);prev=p.th;}g.stroke();}
+
+/* ---------- readouts ---------- */
+function updateLin(){const rows=eqList().map(e=>{const name=e.th===0?'(0, 0)':e.th===Math.PI?'(±π, 0)':`(${e.th>0?'+':'−'}θ*, 0) = ${e.th>0?'+':'−'}${Math.abs(deg(e.th)).toFixed(1)}°`;
+  const cls=e.type==='saddle'?'s':e.type==='degenerate'?'d':'c';return`<tr><td>${name}</td><td class="num">${e.tr===0?'0':e.tr.toFixed(2)}</td><td class="num">${e.det>=0?'+':'−'}${Math.abs(e.det).toFixed(2)}</td><td><span class="pill ${cls}">${e.type}</span></td></tr>`;});
+  if(thStar()===null)rows.push(`<tr><td style="color:var(--faint)">±θ*</td><td colspan="3" style="color:var(--faint)">does not exist: needs ω² &gt; g/L</td></tr>`);
+  $('#linBody').innerHTML=rows.join('');}
+let lastVerdict='';
+function readout(){const kk=k(),w2=S.w*S.w,split=w2>kk;const H=Hf(S.th,S.v);const th=wrap(S.th);let v;
+  if(S.mode==='rest'){v=split?`Ready at θ₀ = ${deg(S.th0).toFixed(0)}°, v₀ = ${S.v0.toFixed(2)}. Once it spins, the pendulum will orbit one of the off-center wells or swing across both.`:`Ready at θ₀ = ${deg(S.th0).toFixed(0)}°, v₀ = ${S.v0.toFixed(2)}. Below ω<sub>c</sub>, the only stable spot is straight down.`;}
+  else if(H>kk+1e-9)v='Going <i>over the top</i>: H is above the separatrix through θ = ±π.';
+  else if(split&&H<-kk-1e-9){const ts=thStar();v=`Trapped in the ${th>0?'right':'left'} well around θ* = ${th>0?'+':'−'}${deg(ts).toFixed(1)}°. The new center born at the bifurcation.`;}
+  else if(split)v='Swinging <i>across both wells</i>, passing over the saddle at θ = 0.';
+  else v='Swinging about the bottom, θ = 0, which is a center for ω &lt; ω<sub>c</sub>.';
+  if(v!==lastVerdict){$('#verdict').innerHTML=v;lastVerdict=v;}
+  $('#sRatio').textContent=(S.w/wc()).toFixed(2);const ts=thStar();$('#sStar').textContent=ts===null?'none':'±'+deg(ts).toFixed(1)+'°';
+  $('#sTV').textContent=`${deg(th).toFixed(0)}°, ${S.v.toFixed(2)}`;$('#sH').textContent=H.toFixed(2);
+  $('#thOut').textContent=deg(th).toFixed(0)+'°';$('#tOut').textContent=S.t.toFixed(2);}
+
+/* ---------- controls ---------- */
+function syncUI(){const run=S.mode==='run';const tag=$('#modeTag');tag.textContent=run?(S.paused?'Paused':'Spinning'):'At rest';tag.classList.toggle('run',run&&!S.paused);
+  $('#pauseBtn').disabled=!run;$('#pauseBtn').textContent=S.paused?'Resume':'Pause';$('#startBtn').textContent=run?'Restart from θ₀':'Start spinning';$('#stateTag').textContent=run?'spinning':'at rest';}
+function toRest(){S.mode='rest';S.paused=false;S.th=S.th0;S.v=S.v0;S.t=0;S.phi=0;S.hist=[];PT.length=0;clearTrail3();syncUI();}
+function start(){toRest();S.mode='run';syncUI();}
+function setTheta0(){const d=+$('#theta0').value;$('#theta0Out').textContent=d+'°';S.th0=d*Math.PI/180;toRest();}
+$('#v0').addEventListener('input',()=>{const v=+$('#v0').value;$('#v0Out').textContent=v.toFixed(2)+' rad/s';S.v0=v;toRest();});
+function setCrit(){const r=wc()/WMAX*100;$('#critMark').style.left=`calc(${Math.min(100,r)}% )`;$('#critLbl').innerHTML=`ω<sub>c</sub> = √(g/L) = ${wc().toFixed(2)} rad/s`;}
+function bind(id,fmt,fn){const el=$('#'+id),out=$('#'+id+'Out');const f=()=>{out.textContent=fmt(+el.value);fn(+el.value);};el.addEventListener('input',f);out.textContent=fmt(+el.value);}
+bind('omega',v=>v.toFixed(2)+' rad/s',v=>{S.w=v;dirty=true;updateLin();});
+$('#theta0').addEventListener('input',setTheta0);
+bind('fric',v=>v.toFixed(2)+' /s',v=>{S.gam=v;dirty=true;updateLin();});
+bind('len',v=>v.toFixed(2)+' m',v=>{S.L=v;dirty=true;setCrit();updateLin();});
+bind('speed',v=>v.toFixed(2)+'×',v=>{S.speed=v;});
+$('#startBtn').addEventListener('click',start);
+$('#pauseBtn').addEventListener('click',()=>{S.paused=!S.paused;syncUI();});
+$('#resetBtn').addEventListener('click',toRest);
+
+/* ---------- sizing ---------- */
+function onResize(){const r=car.parentElement.getBoundingClientRect();R3.setSize(Math.max(1,r.width),Math.max(1,r.height),false);cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();sizePhase();}
+new ResizeObserver(onResize).observe($('#carouselView'));new ResizeObserver(onResize).observe($('#phaseView'));
+
+/* ---------- loop ---------- */
+let prev=performance.now(),frameN=0;const wp=new THREE.Vector3();
+function frame(now){const dt=Math.min(0.05,(now-prev)/1000);prev=now;frameN++;
+  if(!reduceMotion&&now-orbit.last>3000){orbit.az+=dt*0.05;placeCam();}
+  if(S.mode==='run'&&!S.paused){const T=dt*S.speed;const n=Math.max(1,Math.ceil(T/0.002));const h=T/n;
+    for(let i=0;i<n;i++){[S.th,S.v]=rk4(S.th,S.v,h);}S.phi+=S.w*T;S.t+=T;
+    S.hist.push({t:S.t,th:wrap(S.th)});while(S.hist.length&&S.hist[0].t<S.t-TW-1)S.hist.shift();
+    PT.push([wrap(S.th),S.v]);if(PT.length>PTN)PT.shift();}
+  carousel.rotation.y=S.phi;setPendulum(S.th);
+  if(S.mode==='run'&&!S.paused){carousel.updateMatrixWorld(true);bob.getWorldPosition(wp);pushTrail3(wp);}
+  drawPhase();drawBif();drawPot();drawTh();readout();
+  R3.render(sc,cam);requestAnimationFrame(frame);}
+
+/* ---------- init ---------- */
+placeCam();onResize();setCrit();updateLin();start();
+requestAnimationFrame(frame);
+}
+Promise.race([document.fonts?document.fonts.ready:Promise.resolve(),new Promise(r=>setTimeout(r,1500))]).then(startLab);
+</script>
+
+</body></html>

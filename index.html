@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ashwin Krishnaswamy — Simulations</title>
+<meta name="description" content="Interactive physics and dynamics simulations by Ashwin Krishnaswamy, Electrical and Systems Engineering at Penn.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0f1c; --panel:#0f1729; --panel-2:#131d33; --line:#22304f;
+  --fg:#e7eaf3; --muted:#8a96b3; --faint:#5a6684;
+  --amber:#f4b860; --teal:#56d4c4; --rose:#ff6f8e; --violet:#ab8cff;
+  --display:"Newsreader", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ink);color:var(--fg)}
+body{font-family:var(--body);line-height:1.55;padding:56px 16px 64px}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:56px}
+
+header{display:grid;gap:14px;max-width:64ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:400;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:1;margin:0;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--amber)}
+header p{margin:0;color:var(--muted);font-size:16px}
+header p b{color:var(--fg);font-weight:500}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.links a{font-family:var(--mono);font-size:12px;text-decoration:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;color:var(--fg);background:var(--panel)}
+.links a:hover{border-color:var(--muted)}
+
+section h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 16px;display:flex;align-items:center;gap:12px}
+section h2::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:20px}
+.card{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;transition:border-color .15s, transform .15s}
+.card:hover{border-color:var(--muted);transform:translateY(-2px)}
+.preview{position:relative;aspect-ratio:16/10;overflow:hidden;background:radial-gradient(120% 90% at 50% 35%,#16223d 0%,var(--panel) 70%);border-bottom:1px solid var(--line)}
+.preview iframe{position:absolute;top:0;left:0;width:250%;height:250%;transform:scale(.4);transform-origin:0 0;border:0;pointer-events:none}
+.preview .open{position:absolute;right:12px;bottom:12px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--amber);color:#1b1306;font-weight:500}
+.body{padding:16px 18px 18px;display:grid;gap:8px}
+.card h3{font-family:var(--display);font-weight:500;font-size:24px;margin:0;line-height:1.15}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+
+.soon{display:grid;place-items:center;text-align:center;min-height:200px;border:1px dashed var(--line);border-radius:14px;color:var(--faint);font-size:14px;padding:24px}
+.soon b{display:block;font-family:var(--display);font-style:italic;font-weight:400;font-size:22px;color:var(--muted);margin-bottom:4px}
+
+footer{font-size:12px;color:var(--faint);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Electrical &amp; Systems Engineering · University of Pennsylvania</div>
+    <h1>Ashwin <em>Krishnaswamy</em></h1>
+    <p>I build interactive simulations of <b>dynamical systems</b>: rigid bodies, control loops, and robots. Each one below runs live in your browser, so you can poke at the physics instead of reading about it.</p>
+    <div class="links">
+      <a href="mailto:ashwinkr@engineering.upenn.edu">Email</a>
+      <!-- Add more links here, e.g.:
+      <a href="https://www.linkedin.com/in/your-handle">LinkedIn</a>
+      <a href="resume.pdf">Resume</a>
+      -->
+    </div>
+  </header>
+
+  <section>
+    <h2>Simulations</h2>
+    <div class="grid">
+
+      <!-- ===== Copy this <a class="card"> block to add a new simulation ===== -->
+      <a class="card" href="sims/intermediate-axis/">
+        <div class="preview">
+          <iframe src="sims/intermediate-axis/" title="Intermediate Axis Lab preview" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+          <span class="open">Open ↗</span>
+        </div>
+        <div class="body">
+          <h3>Intermediate Axis Lab</h3>
+          <p>Toss a book about each principal axis and watch why spins about the middle axis flip. Integrates Euler's equations and traces angular momentum on the sphere |L| = const, with linearized stability at all six equilibria.</p>
+          <div class="tags"><span class="tag">rigid-body dynamics</span><span class="tag">stability</span><span class="tag">three.js</span></div>
+        </div>
+      </a>
+      <!-- ===== end card ===== -->
+
+      <div class="soon"><div><b>More on the way</b>Controls, robotics, and battery-thermal simulations</div></div>
+
+    </div>
+  </section>
+
+  <footer>© 2026 Ashwin Krishnaswamy</footer>
+</div>
+</body>
+</html>

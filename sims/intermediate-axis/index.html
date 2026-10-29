@@ -1,0 +1,533 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Intermediate Axis Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: two instrument panels (book | L-sphere), a strip of three live traces, then three readout cards */
+:root{
+  --ink:#0a0f1c; --panel:#0f1729; --panel-2:#131d33; --line:#22304f; --fg:#e7eaf3; --muted:#8a96b3; --faint:#5a6684;
+  --amber:#f4b860; --teal:#56d4c4; --rose:#ff6f8e; --violet:#ab8cff; --cyan:#7cc6ff;
+  --display:"Newsreader", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+html,body{background:var(--ink);color:var(--fg)}
+body{font-family:var(--body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1300px;margin:0 auto;display:grid;gap:20px}
+header{display:grid;gap:6px;max-width:72ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:400;font-style:italic;font-size:clamp(30px,4.2vw,46px);line-height:1.05;margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--amber)}
+header p{margin:0;color:var(--muted);font-size:15px}
+header p b{color:var(--fg);font-weight:500}
+
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:900px){.stage{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:var(--display);font-weight:500;font-size:20px;margin:0}
+.hint{font-size:12px;color:var(--muted)}
+.view{position:relative;width:100%;aspect-ratio:1/0.86;max-width:100%;touch-action:none;cursor:grab;background:radial-gradient(120% 90% at 50% 35%,#16223d 0%,var(--panel) 70%)}
+.view:active{cursor:grabbing}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:12px;top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);pointer-events:none;display:grid;gap:2px}
+.hud b{color:var(--fg);font-weight:500}
+.legend{position:absolute;right:12px;bottom:10px;display:grid;gap:4px;font-size:11.5px;color:var(--muted);pointer-events:none;background:color-mix(in srgb,var(--panel) 75%,transparent);padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{width:10px;height:10px;border-radius:50%;flex:none}
+.sw.line{border-radius:2px;height:3px;width:14px}
+.arrow-key{position:absolute;left:12px;bottom:10px;display:grid;gap:4px;font-size:11.5px;color:var(--muted);pointer-events:none}
+.arrow-key span{display:flex;align-items:center;gap:8px}
+.mode-tag{position:absolute;right:12px;top:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);pointer-events:none}
+.mode-tag.run{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 45%,transparent)}
+
+.controls{display:grid;gap:12px;padding:14px 16px 16px;border-top:1px solid var(--line)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.presets .lbl{font-size:12px;color:var(--muted);margin-right:2px}
+.chip{font:inherit;font-size:12.5px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.chip:hover{border-color:var(--muted)}
+.chip .sw{width:8px;height:8px}
+.sliders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:520px){.sliders{grid-template-columns:1fr}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.field label output{font-family:var(--mono);color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--amber);height:20px}
+.buttons{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-size:13.5px;font-weight:500;padding:8px 16px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#1b1306}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+.traces{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:20px}
+@media (max-width:900px){.traces{grid-template-columns:1fr}}
+.trace{padding:12px 14px 10px;gap:6px}
+.trace h3,.card h3{margin:0;font-size:13px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.trace h3 small,.card h3 small{font-weight:400;color:var(--muted);font-size:12px}
+.trace canvas{width:100%;height:150px;display:block}
+.keys{display:flex;gap:14px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.keys span{display:flex;align-items:center;gap:6px}
+
+.cards{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:20px}
+@media (max-width:1000px){.cards{grid-template-columns:1fr}}
+.card{padding:14px 16px 16px;gap:12px}
+.verdict{font-family:var(--display);font-size:19px;line-height:1.3;margin:0;text-wrap:balance}
+.verdict i{font-style:italic}
+.gauge{position:relative;height:46px;margin-top:4px}
+.g-track{position:absolute;left:0;right:0;top:14px;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--teal),color-mix(in srgb,var(--teal) 30%,var(--panel-2)) 45%,color-mix(in srgb,var(--violet) 30%,var(--panel-2)) 55%,var(--violet))}
+.g-sep{position:absolute;top:6px;width:2px;height:22px;background:var(--rose);transform:translateX(-1px);border-radius:1px}
+.g-dot{position:absolute;top:9px;width:16px;height:16px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 3px color-mix(in srgb,var(--amber) 30%,transparent),0 0 14px var(--amber);transform:translateX(-8px);transition:left .15s}
+.g-labels{position:absolute;left:0;right:0;top:30px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;font-size:12.5px}
+.stats div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.stats span{color:var(--muted)}
+.stats b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.eq{font-family:var(--mono);font-size:12.5px;line-height:1.9;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;overflow-x:auto}
+.eq sub{font-size:.75em}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:500;font-size:11.5px}
+td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid}
+.pill.c{color:var(--teal);border-color:color-mix(in srgb,var(--teal) 50%,transparent)}
+.pill.cz{color:var(--violet);border-color:color-mix(in srgb,var(--violet) 50%,transparent)}
+.pill.s{color:var(--rose);border-color:color-mix(in srgb,var(--rose) 50%,transparent)}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.note b{color:var(--fg);font-weight:500}
+.dimgrid{display:grid;gap:10px}
+footer{font-size:12px;color:var(--faint)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ESE 2100 · Euler's equations for a free rigid body</div>
+    <h1>Intermediate Axis <em>Lab</em></h1>
+    <p>Orient the book under the spin axis, toss it, and watch the angular momentum <b>L</b> ride along the sphere |L| = const. Spins about the largest and smallest moments sit at <b>centers</b>; the middle axis is a <b>saddle</b>, so the book flips.</p>
+  </header>
+
+  <section class="stage">
+    <div class="panel">
+      <div class="panel-head"><h2>The book</h2><span class="hint" id="bookHint">Drag to orient · spin axis is fixed and parallel to the floor</span></div>
+      <div class="view" id="bookView">
+        <canvas id="bookCanvas"></canvas>
+        <div class="mode-tag" id="modeTag">Orienting</div>
+        <div class="arrow-key">
+          <span><i class="sw line" style="background:var(--cyan)"></i>ω, angular velocity</span>
+          <span><i class="sw line" style="background:var(--amber)"></i>L, angular momentum (fixed in space)</span>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="presets">
+          <span class="lbl">Spin about</span>
+          <button class="chip" data-axis="0"><i class="sw" style="background:var(--teal)"></i>x · largest I</button>
+          <button class="chip" data-axis="1"><i class="sw" style="background:var(--rose)"></i>y · middle I</button>
+          <button class="chip" data-axis="2"><i class="sw" style="background:var(--violet)"></i>z · smallest I</button>
+        </div>
+        <div class="sliders">
+          <div class="field"><label for="wobble">Wobble off-axis <output id="wobbleOut">3°</output></label><input id="wobble" type="range" min="0" max="20" step="0.5" value="3"></div>
+          <div class="field"><label for="w0">Spin rate ω₀ <output id="w0Out">5.0 rad/s</output></label><input id="w0" type="range" min="1" max="10" step="0.5" value="5"></div>
+          <div class="field"><label for="speed">Playback <output id="speedOut">1.0×</output></label><input id="speed" type="range" min="0.1" max="2" step="0.1" value="1"></div>
+        </div>
+        <div class="buttons">
+          <button class="btn primary" id="tossBtn">Toss</button>
+          <button class="btn" id="pauseBtn">Pause</button>
+          <button class="btn" id="resetBtn">Reset to orient</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Angular momentum sphere</h2><span class="hint">Drag to orbit · body-frame (l<sub>x</sub>, l<sub>y</sub>, l<sub>z</sub>), normalized</span></div>
+      <div class="view" id="sphereView">
+        <canvas id="sphereCanvas"></canvas>
+        <div class="hud"><span>t = <b id="tOut">0.00</b> s</span><span>orbit: <b id="orbitOut">–</b></span></div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--teal)"></i>center · ±l<sub>x</sub> (largest I)</span>
+          <span><i class="sw" style="background:var(--violet)"></i>center · ±l<sub>z</sub> (smallest I)</span>
+          <span><i class="sw" style="background:var(--rose)"></i>saddle · ±l<sub>y</sub> + separatrix</span>
+          <span><i class="sw" style="background:var(--amber)"></i>your toss</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="traces">
+    <div class="panel trace">
+      <h3>Body-frame components of L <small>normalized by |L|</small></h3>
+      <canvas id="chL"></canvas>
+      <div class="keys"><span><i class="sw line" style="background:var(--teal)"></i>l<sub>x</sub></span><span><i class="sw line" style="background:var(--rose)"></i>l<sub>y</sub></span><span><i class="sw line" style="background:var(--violet)"></i>l<sub>z</sub></span></div>
+    </div>
+    <div class="panel trace">
+      <h3>Angle between ω and L <small>degrees</small></h3>
+      <canvas id="chA"></canvas>
+      <div class="keys"><span>Zero only for a spin about a principal axis</span></div>
+    </div>
+    <div class="panel trace">
+      <h3>Conservation check <small>relative drift ×10⁻⁶</small></h3>
+      <canvas id="chC"></canvas>
+      <div class="keys"><span><i class="sw line" style="background:var(--amber)"></i>|L|²</span><span><i class="sw line" style="background:var(--cyan)"></i>energy E</span></div>
+    </div>
+  </section>
+
+  <section class="cards">
+    <div class="panel card">
+      <h3>Your toss <small id="tossState">prediction</small></h3>
+      <p class="verdict" id="verdict">–</p>
+      <div class="gauge" aria-hidden="true">
+        <div class="g-track"></div><div class="g-sep" id="gSep"></div><div class="g-dot" id="gDot"></div>
+        <div class="g-labels"><span>1/I<sub>x</sub></span><span id="gSepLbl">1/I<sub>y</sub></span><span>1/I<sub>z</sub></span></div>
+      </div>
+      <p class="note">The dot is 2E/|L|². Below the red separatrix value the orbit circles ±l<sub>x</sub>; above it, ±l<sub>z</sub>. Both quantities are conserved, so the dot never moves once the book is in the air.</p>
+      <div class="stats">
+        <div><span>l̂ = L/|L|</span><b id="sL">–</b></div>
+        <div><span>ω–L angle</span><b id="sA">–</b></div>
+        <div><span>|L|</span><b id="sLm">–</b></div>
+        <div><span>E</span><b id="sE">–</b></div>
+      </div>
+    </div>
+
+    <div class="panel card">
+      <h3>Linearization at the six equilibria <small>|L| = c</small></h3>
+      <div class="eq">dl<sub>x</sub>/dt = (I<sub>y</sub>−I<sub>z</sub>)/(I<sub>y</sub>I<sub>z</sub>) · l<sub>y</sub>l<sub>z</sub><br>dl<sub>y</sub>/dt = (I<sub>z</sub>−I<sub>x</sub>)/(I<sub>x</sub>I<sub>z</sub>) · l<sub>x</sub>l<sub>z</sub><br>dl<sub>z</sub>/dt = (I<sub>x</sub>−I<sub>y</sub>)/(I<sub>x</sub>I<sub>y</sub>) · l<sub>x</sub>l<sub>y</sub></div>
+      <table>
+        <thead><tr><th>Equilibrium</th><th>Tr</th><th>Det of 2×2 block / c²</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td>(±c, 0, 0)</td><td class="num">0</td><td class="num" id="dX">–</td><td><span class="pill c">center</span></td></tr>
+          <tr><td>(0, ±c, 0)</td><td class="num">0</td><td class="num" id="dY">–</td><td><span class="pill s">saddle</span></td></tr>
+          <tr><td>(0, 0, ±c)</td><td class="num">0</td><td class="num" id="dZ">–</td><td><span class="pill cz">center</span></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Tr = 0 everywhere, so the sign of Det decides: Det &gt; 0 gives a center, Det &lt; 0 a saddle. Conservation makes the predicted centers true centers.</p>
+    </div>
+
+    <div class="panel card">
+      <h3>Book shape <small>uniform box, I = m(a² + b²)/12</small></h3>
+      <div class="dimgrid">
+        <div class="field"><label for="dx">Thickness (x) <output id="dxOut">0.50</output></label><input id="dx" type="range" min="0.2" max="1.4" step="0.05" value="0.5"></div>
+        <div class="field"><label for="dy">Width (y) <output id="dyOut">2.00</output></label><input id="dy" type="range" min="0.6" max="2.8" step="0.05" value="2"></div>
+        <div class="field"><label for="dz">Height (z) <output id="dzOut">3.00</output></label><input id="dz" type="range" min="1.2" max="3.4" step="0.05" value="3"></div>
+      </div>
+      <div class="stats">
+        <div><span>I<sub>x</sub></span><b id="Ix">–</b></div>
+        <div><span>I<sub>y</sub></span><b id="Iy">–</b></div>
+        <div><span>I<sub>z</sub></span><b id="Iz">–</b></div>
+        <div><span>order</span><b>I<sub>x</sub> &gt; I<sub>y</sub> &gt; I<sub>z</sub></b></div>
+      </div>
+      <p class="note">Sliders keep thickness &lt; width &lt; height so the ordering always holds. A squarer book moves the separatrix and shrinks one of the stable regions.</p>
+    </div>
+  </section>
+  <footer>Free rotation: no gravity torque or air drag. RK4 integration of Euler's equations plus the body's orientation quaternion.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+function startLab(){
+const HEX={amber:0xf4b860,teal:0x56d4c4,rose:0xff6f8e,violet:0xab8cff,cyan:0x7cc6ff};
+const CSSC={amber:'#f4b860',teal:'#56d4c4',rose:'#ff6f8e',violet:'#ab8cff',cyan:'#7cc6ff',line:'#22304f',muted:'#8a96b3',faint:'#5a6684',panel:'#0f1729'};
+const AXC=[HEX.teal,HEX.rose,HEX.violet];
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+
+/* ---------- state + physics ---------- */
+const S={dims:{x:0.5,y:2,z:3},I:[1,1,1],w0:5,wobble:3,speed:1,mode:'pick',paused:false,
+  state:[0,0,0,1,0,0,0],t:0,L0sq:1,E0:1,hist:[],qPick:null};
+function computeI(){const {x,y,z}=S.dims;S.I=[y*y+z*z,x*x+z*z,x*x+y*y];}
+function qmul(a,b){return[a[0]*b[0]-a[1]*b[1]-a[2]*b[2]-a[3]*b[3],a[0]*b[1]+a[1]*b[0]+a[2]*b[3]-a[3]*b[2],a[0]*b[2]-a[1]*b[3]+a[2]*b[0]+a[3]*b[1],a[0]*b[3]+a[1]*b[2]-a[2]*b[1]+a[3]*b[0]];}
+function qconj(q){return[q[0],-q[1],-q[2],-q[3]];}
+function qrot(q,v){const p=qmul(qmul(q,[0,v[0],v[1],v[2]]),qconj(q));return[p[1],p[2],p[3]];}
+function cross(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function deriv(s){const I=S.I;const L=[s[0],s[1],s[2]];const w=[L[0]/I[0],L[1]/I[1],L[2]/I[2]];
+  const dL=cross(L,w); /* body frame: dL/dt = L x w */
+  const dq=qmul([s[3],s[4],s[5],s[6]],[0,w[0],w[1],w[2]]);return[dL[0],dL[1],dL[2],.5*dq[0],.5*dq[1],.5*dq[2],.5*dq[3]];}
+function rk4(s,h){const k1=deriv(s),a=s.map((v,i)=>v+.5*h*k1[i]),k2=deriv(a),b=s.map((v,i)=>v+.5*h*k2[i]),k3=deriv(b),c=s.map((v,i)=>v+h*k3[i]),k4=deriv(c);
+  const o=s.map((v,i)=>v+h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]));const n=Math.hypot(o[3],o[4],o[5],o[6]);for(let i=3;i<7;i++)o[i]/=n;return o;}
+const energy=L=>.5*(L[0]*L[0]/S.I[0]+L[1]*L[1]/S.I[1]+L[2]*L[2]/S.I[2]);
+const norm=v=>Math.hypot(v[0],v[1],v[2]);
+const tq2a=q=>[q.w,q.x,q.y,q.z];
+
+/* ---------- shared label helper ---------- */
+function labelSprite(main,sub,color,h){const c=document.createElement('canvas');const g0=c.getContext('2d');
+  const F1='500 76px "IBM Plex Mono", ui-monospace, monospace',F2='500 46px "IBM Plex Mono", ui-monospace, monospace';
+  g0.font=F1;const w1=g0.measureText(main).width;g0.font=F2;const w2=sub?g0.measureText(sub).width+6:0;
+  c.width=Math.ceil(w1+w2+36);c.height=128;const g=c.getContext('2d');
+  g.fillStyle=color;g.textBaseline='alphabetic';g.font=F1;g.fillText(main,18,90);if(sub){g.font=F2;g.fillText(sub,22+w1,108);}
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false,depthWrite:false}));s.scale.set(h*c.width/128,h,1);s.renderOrder=10;return s;}
+
+/* =========================================================
+   BOOK SCENE
+   ========================================================= */
+const bookCanvas=$('#bookCanvas');
+const bR=new THREE.WebGLRenderer({canvas:bookCanvas,antialias:true,alpha:true});
+bR.setPixelRatio(Math.min(devicePixelRatio,2));bR.outputEncoding=THREE.sRGBEncoding;bR.toneMapping=THREE.ACESFilmicToneMapping;bR.toneMappingExposure=1.05;
+const bS=new THREE.Scene();
+const bC=new THREE.PerspectiveCamera(36,1,0.1,100);bC.position.set(5.2,3.6,8.4);bC.lookAt(0,-0.2,0);
+bS.add(new THREE.HemisphereLight(0xaab9ff,0x1b140e,0.75));
+const key=new THREE.DirectionalLight(0xfff3e2,1.25);key.position.set(4,7,6);bS.add(key);
+const rim=new THREE.DirectionalLight(0x7cc6ff,0.5);rim.position.set(-6,2,-5);bS.add(rim);
+
+// floor
+const floorY=-2.55;
+const grid=new THREE.GridHelper(16,32,0x2c3b60,0x1c2742);grid.position.y=floorY;grid.material.transparent=true;grid.material.opacity=0.55;bS.add(grid);
+(function(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const r=g.createRadialGradient(128,128,10,128,128,128);
+  r.addColorStop(0,'rgba(0,0,0,0.55)');r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,256,256);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(5.5,5.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));
+  m.rotation.x=-Math.PI/2;m.position.y=floorY+0.01;bS.add(m);})();
+
+// book textures
+function tex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t;}
+function cloth(g,w,h,base){g.fillStyle=base;g.fillRect(0,0,w,h);for(let i=0;i<2200;i++){g.fillStyle=`rgba(255,255,255,${Math.random()*0.035})`;g.fillRect(Math.random()*w,Math.random()*h,2,2);}}
+const coverTex=tex(768,512,(g,w,h)=>{cloth(g,w,h,'#5e2230');g.strokeStyle='#d9ae63';g.lineWidth=5;g.strokeRect(26,26,w-52,h-52);g.lineWidth=1.5;g.strokeRect(40,40,w-80,h-80);
+  // canvas left = +z (top of book); rotate so text runs along +y
+  g.save();g.translate(w/2,h/2);g.rotate(-Math.PI/2);g.fillStyle='#e6bd72';g.textAlign='center';
+  g.font='italic 500 46px "Newsreader", Georgia, serif';g.fillText('Applied',0,-150);
+  g.font='600 44px "IBM Plex Sans", system-ui, sans-serif';g.fillText('DYNAMICAL',0,-96);g.fillText('SYSTEMS',0,-46);
+  g.strokeStyle='#e6bd72';g.lineWidth=3;g.beginPath();g.arc(0,90,70,0,Math.PI*2);g.stroke();
+  g.lineWidth=1.6;for(const k of[.35,.7]){g.beginPath();g.ellipse(0,90,70,70*k,0,0,Math.PI*2);g.stroke();g.beginPath();g.ellipse(0,90,70*k,70,0,0,Math.PI*2);g.stroke();}
+  g.restore();});
+const backTex=tex(768,512,(g,w,h)=>{cloth(g,w,h,'#561e2b');g.strokeStyle='#b88d4f';g.lineWidth=2;g.strokeRect(30,30,w-60,h-60);});
+const pagesTex=tex(256,256,(g,w,h)=>{g.fillStyle='#efe6d2';g.fillRect(0,0,w,h);for(let x=0;x<w;x+=3){g.fillStyle=`rgba(120,100,70,${0.08+Math.random()*0.12})`;g.fillRect(x,0,1,h);}});
+const spineTex=tex(256,512,(g,w,h)=>{cloth(g,w,h,'#521c28');g.fillStyle='#d9ae63';for(const y of[60,72,h-72,h-60])g.fillRect(0,y,w,4);});
+const mats=[coverTex,backTex,pagesTex,spineTex,pagesTex,pagesTex].map(m=>new THREE.MeshStandardMaterial({map:m,roughness:0.78,metalness:0.02}));
+const bookRoot=new THREE.Group();bS.add(bookRoot);
+const bookMesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mats);bookRoot.add(bookMesh);
+// body axes stubs
+const stubs=[];
+for(let k=0;k<3;k++){const grp=new THREE.Group();const m=new THREE.MeshBasicMaterial({color:AXC[k]});
+  const rod=new THREE.Mesh(new THREE.CylinderGeometry(0.016,0.016,1,8),m);grp.add(rod);
+  const tipA=new THREE.Mesh(new THREE.SphereGeometry(0.06,16,12),m),tipB=tipA.clone();grp.add(tipA,tipB);
+  const lab=labelSprite(['x','y','z'][k],'',['#56d4c4','#ff6f8e','#ab8cff'][k],0.38);grp.add(lab);
+  stubs.push({grp,rod,tipA,tipB,lab});bookRoot.add(grp);}
+function layoutBook(){const d=[S.dims.x,S.dims.y,S.dims.z];bookMesh.scale.set(d[0],d[1],d[2]);
+  stubs.forEach((s,k)=>{const len=d[k]+0.9;const ax=new THREE.Vector3(k==0,k==1,k==2);
+    s.rod.scale.set(1,len,1);s.rod.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),ax);
+    s.tipA.position.copy(ax).multiplyScalar(len/2);s.tipB.position.copy(ax).multiplyScalar(-len/2);
+    s.lab.position.copy(ax).multiplyScalar(len/2+0.28);});}
+
+// spin axis (dashed, along world X)
+const axisGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-3.6,0,0),new THREE.Vector3(3.6,0,0)]);
+const axisLine=new THREE.Line(axisGeo,new THREE.LineDashedMaterial({color:0xc6d0e8,dashSize:0.16,gapSize:0.1,transparent:true,opacity:0.7}));axisLine.computeLineDistances();bS.add(axisLine);
+const axisLab=labelSprite('spin axis','',"#c6d0e8",0.26);axisLab.position.set(-2.9,0.3,0);bS.add(axisLab);
+
+function makeArrow(color,r){const g=new THREE.Group();const m=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.55,roughness:0.35});
+  const sg=new THREE.CylinderGeometry(r,r,1,14);sg.translate(0,0.5,0);const shaft=new THREE.Mesh(sg,m);
+  const hg=new THREE.ConeGeometry(r*3.2,r*9,18);hg.translate(0,-r*4.5,0);const head=new THREE.Mesh(hg,m);g.add(shaft,head);
+  const Y=new THREE.Vector3(0,1,0);
+  g.set=(dir,len)=>{const d=new THREE.Vector3(...dir).normalize();g.quaternion.setFromUnitVectors(Y,d);shaft.scale.y=Math.max(0.01,len-r*9);head.position.y=len;};
+  return g;}
+const wArrow=makeArrow(HEX.cyan,0.04),LArrow=makeArrow(HEX.amber,0.045);bS.add(wArrow,LArrow);
+
+/* =========================================================
+   SPHERE SCENE
+   ========================================================= */
+const sphCanvas=$('#sphereCanvas');
+const sR=new THREE.WebGLRenderer({canvas:sphCanvas,antialias:true,alpha:true});sR.setPixelRatio(Math.min(devicePixelRatio,2));
+const sS=new THREE.Scene();const sC=new THREE.PerspectiveCamera(34,1,0.1,100);
+const R=1.55;
+const P=(v,r=R)=>new THREE.Vector3(v[0]*r,v[2]*r,-v[1]*r); // physics (x,y,z) -> three (x, z up, -y)
+
+const shellMat=new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color(0x3a63b8)}},transparent:true,depthWrite:false,
+  vertexShader:`varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.0);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform vec3 uColor;varying vec3 vN;varying vec3 vV;void main(){float f=1.0-abs(dot(normalize(vN),normalize(vV)));float a=0.035+pow(f,3.2)*0.5;gl_FragColor=vec4(uColor,a);}`});
+sS.add(new THREE.Mesh(new THREE.SphereGeometry(R*0.995,96,64),shellMat));
+
+const lineVS=`attribute float aAlpha;varying float vA;varying float vF;void main(){vec4 wp=modelMatrix*vec4(position,1.0);vF=dot(normalize(wp.xyz),normalize(cameraPosition-wp.xyz));vA=aAlpha;gl_Position=projectionMatrix*viewMatrix*wp;}`;
+const lineFS=`uniform vec3 uColor;uniform float uFront;uniform float uBack;varying float vA;varying float vF;void main(){float a=mix(uBack,uFront,smoothstep(-0.12,0.28,vF))*vA;gl_FragColor=vec4(uColor*a,a);}`;
+function lineMat(color,front,back){return new THREE.ShaderMaterial({uniforms:{uColor:{value:new THREE.Color(color)},uFront:{value:front},uBack:{value:back}},vertexShader:lineVS,fragmentShader:lineFS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});}
+function lineFrom(pts,mat){const g=new THREE.BufferGeometry();const pos=new Float32Array(pts.length*3),al=new Float32Array(pts.length).fill(1);
+  pts.forEach((p,i)=>{const v=P(p);pos[i*3]=v.x;pos[i*3+1]=v.y;pos[i*3+2]=v.z;});g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('aAlpha',new THREE.BufferAttribute(al,1));return new THREE.Line(g,mat);}
+
+const ptVS=`attribute float aAlpha;attribute vec3 aColor;uniform float uSize;uniform float uScale;varying float vA;varying vec3 vC;varying float vF;void main(){vec4 wp=modelMatrix*vec4(position,1.0);vF=dot(normalize(wp.xyz),normalize(cameraPosition-wp.xyz));vec4 mv=viewMatrix*wp;vA=aAlpha;vC=aColor;gl_PointSize=uSize*(0.35+0.65*aAlpha)*uScale/-mv.z;gl_Position=projectionMatrix*mv;}`;
+const ptFS=`uniform float uBack;varying float vA;varying vec3 vC;varying float vF;void main(){vec2 c=gl_PointCoord-0.5;float d=length(c)*2.0;if(d>1.0)discard;float core=smoothstep(0.42,0.0,d);float glow=exp(-d*d*5.0)*0.55;float face=mix(uBack,1.0,smoothstep(-0.12,0.28,vF));float a=(core+glow)*vA*face;gl_FragColor=vec4(mix(vC,vec3(1.0),core*0.35)*a,a);}`;
+const scaleU={value:500};
+function ptMat(size,back){return new THREE.ShaderMaterial({uniforms:{uSize:{value:size},uScale:scaleU,uBack:{value:back}},vertexShader:ptVS,fragmentShader:ptFS,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});}
+
+// axes
+const axesGrp=new THREE.Group();sS.add(axesGrp);
+const axisMat=lineMat(0x8a96b3,0.45,0.18);
+[[1,0,0],[0,1,0],[0,0,1]].forEach((a,k)=>{axesGrp.add(lineFrom([a.map(c=>-1.32*c),a.map(c=>1.32*c)],axisMat));
+  const lab=labelSprite('l',['x','y','z'][k],['#56d4c4','#ff6f8e','#ab8cff'][k],0.34);lab.position.copy(P(a.map(c=>1.48*c)));axesGrp.add(lab);});
+
+// equilibria
+const eq=new THREE.BufferGeometry();(function(){const pts=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];const pos=new Float32Array(18),col=new Float32Array(18),al=new Float32Array(6).fill(1);
+  pts.forEach((p,i)=>{const v=P(p);pos.set([v.x,v.y,v.z],i*3);col.set(new THREE.Color(AXC[Math.floor(i/2)]).toArray(),i*3);});
+  eq.setAttribute('position',new THREE.BufferAttribute(pos,3));eq.setAttribute('aColor',new THREE.BufferAttribute(col,3));eq.setAttribute('aAlpha',new THREE.BufferAttribute(al,1));})();
+sS.add(new THREE.Points(eq,ptMat(0.32,0.25)));
+
+// polhodes
+const polGrp=new THREE.Group();sS.add(polGrp);
+const matX=lineMat(HEX.teal,0.62,0.09),matZ=lineMat(HEX.violet,0.62,0.09),matSep=lineMat(HEX.rose,1.0,0.16);
+function levelLoop(e,sgn,n=320){const [I1,I2,I3]=S.I;const out=[];
+  if(e<1/I2){const A=1/I2-1/I1,B=1/I3-1/I1,c=Math.max(0,e-1/I1);const a2=Math.sqrt(c/A),a3=Math.sqrt(c/B);
+    for(let i=0;i<=n;i++){const t=i/n*2*Math.PI;const l2=a2*Math.cos(t),l3=a3*Math.sin(t);out.push([sgn*Math.sqrt(Math.max(0,1-l2*l2-l3*l3)),l2,l3]);}}
+  else{const Pp=1/I3-1/I1,Q=1/I3-1/I2,c=Math.max(0,1/I3-e);const a1=Math.sqrt(c/Pp),a2=Math.sqrt(c/Q);
+    for(let i=0;i<=n;i++){const t=i/n*2*Math.PI;const l1=a1*Math.cos(t),l2=a2*Math.sin(t);out.push([l1,l2,sgn*Math.sqrt(Math.max(0,1-l1*l1-l2*l2))]);}}
+  return out;}
+function buildPolhodes(){polGrp.children.slice().forEach(c=>{c.geometry.dispose();polGrp.remove(c);});
+  const [I1,I2,I3]=S.I;const A=1/I2-1/I1,Q=1/I3-1/I2;
+  const ss=[0.06,0.17,0.3,0.45,0.6,0.74,0.86,0.95];
+  for(const s of ss)for(const sg of[1,-1]){polGrp.add(lineFrom(levelLoop(1/I1+s*A,sg),matX));polGrp.add(lineFrom(levelLoop(1/I3-s*Q,sg),matZ));}
+  const k=Math.sqrt((1/I2-1/I1)/(1/I3-1/I2));
+  for(const sg of[1,-1]){const u=[1,0,sg*k],n=Math.hypot(...u);const pts=[];for(let i=0;i<=360;i++){const t=i/360*2*Math.PI;pts.push([Math.cos(t)*u[0]/n,Math.sin(t),Math.cos(t)*u[2]/n]);}polGrp.add(lineFrom(pts,matSep));}}
+
+// predicted / current orbit
+const orbitMat=lineMat(HEX.amber,0.75,0.18);let orbitLine=null;
+function setOrbit(Lb){if(orbitLine){sS.remove(orbitLine);orbitLine.geometry.dispose();}
+  const n=norm(Lb);const e=2*energy(Lb)/(n*n);const sg=e<1/S.I[1]?Math.sign(Lb[0])||1:Math.sign(Lb[2])||1;
+  orbitLine=lineFrom(levelLoop(e,sg,400),orbitMat);sS.add(orbitLine);}
+
+// trail
+const TN=1400;const trailPos=new Float32Array(TN*3),trailA=new Float32Array(TN),trailC=new Float32Array(TN*3);
+const ac=new THREE.Color(HEX.amber);for(let i=0;i<TN;i++)trailC.set([ac.r,ac.g,ac.b],i*3);
+const trailGeo=new THREE.BufferGeometry();trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));trailGeo.setAttribute('aAlpha',new THREE.BufferAttribute(trailA,1));trailGeo.setAttribute('aColor',new THREE.BufferAttribute(trailC,3));
+const trailPts=new THREE.Points(trailGeo,ptMat(0.075,0.18));sS.add(trailPts);
+const trailLine=new THREE.Line(trailGeo,lineMat(0xffd89a,1.0,0.25));sS.add(trailLine);
+let ring=[];
+function pushTrail(Lb){const n=norm(Lb);ring.push(P(Lb.map(c=>c/n)));if(ring.length>TN)ring.shift();
+  const m=ring.length;for(let i=0;i<m;i++){const v=ring[i];trailPos[i*3]=v.x;trailPos[i*3+1]=v.y;trailPos[i*3+2]=v.z;trailA[i]=Math.pow((i+1)/m,1.6);}
+  trailGeo.setDrawRange(0,m);trailGeo.attributes.position.needsUpdate=true;trailGeo.attributes.aAlpha.needsUpdate=true;}
+function clearTrail(){ring=[];trailGeo.setDrawRange(0,0);}
+
+// head + radius
+const headGeo=new THREE.BufferGeometry();headGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3),3));headGeo.setAttribute('aAlpha',new THREE.BufferAttribute(new Float32Array([1]),1));headGeo.setAttribute('aColor',new THREE.BufferAttribute(new Float32Array([ac.r,ac.g,ac.b]),3));
+const head=new THREE.Points(headGeo,ptMat(0.42,0.5));sS.add(head);
+const radGeo=new THREE.BufferGeometry();radGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));radGeo.setAttribute('aAlpha',new THREE.BufferAttribute(new Float32Array([0.15,1]),1));
+const radLine=new THREE.Line(radGeo,lineMat(HEX.amber,0.7,0.4));sS.add(radLine);
+function setHead(Lb){const n=norm(Lb);const v=P(Lb.map(c=>c/n));headGeo.attributes.position.array.set([v.x,v.y,v.z]);headGeo.attributes.position.needsUpdate=true;
+  radGeo.attributes.position.array.set([v.x*0.12,v.y*0.12,v.z*0.12,v.x,v.y,v.z]);radGeo.attributes.position.needsUpdate=true;}
+
+// orbit camera
+const cam={az:0.62,el:0.36,dist:6.4,lastUser:-1e9};
+function placeCam(){sC.position.set(cam.dist*Math.cos(cam.el)*Math.sin(cam.az),cam.dist*Math.sin(cam.el),cam.dist*Math.cos(cam.el)*Math.cos(cam.az));sC.lookAt(0,0,0);}
+
+/* ---------- sizing ---------- */
+function fit(renderer,camera,canvas){const r=canvas.parentElement.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();return h;}
+function onResize(){fit(bR,bC,bookCanvas);const h=fit(sR,sC,sphCanvas);scaleU.value=h*sR.getPixelRatio()/(2*Math.tan(sC.fov*Math.PI/360));}
+new ResizeObserver(onResize).observe($('#bookView'));new ResizeObserver(onResize).observe($('#sphereView'));
+
+/* ---------- picking / presets ---------- */
+function pickL(){const q=tq2a(bookRoot.quaternion);const wb=qrot(qconj(q),[S.w0,0,0]);return[S.I[0]*wb[0],S.I[1]*wb[1],S.I[2]*wb[2]];}
+function preset(k){const img=[[1,0,0],[0,0,-1],[0,1,0]];// default for k=0: x->X, y->-Z, z->Y
+  let cols;if(k===0)cols=[[1,0,0],[0,0,-1],[0,1,0]];else if(k===1)cols=[[0,0,1],[1,0,0],[0,1,0]];else cols=[[0,1,0],[0,0,1],[1,0,0]];
+  const m=new THREE.Matrix4().makeBasis(new THREE.Vector3(...cols[0]),new THREE.Vector3(...cols[1]),new THREE.Vector3(...cols[2]));
+  const q=new THREE.Quaternion().setFromRotationMatrix(m);
+  const tilt=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,1).normalize(),S.wobble*Math.PI/180);
+  bookRoot.quaternion.copy(tilt.multiply(q));}
+let lastPreset=1;
+
+function toss(){S.qPick=bookRoot.quaternion.clone();const L=pickL();const q=tq2a(bookRoot.quaternion);
+  S.state=[...L,...q];S.t=0;S.hist=[];S.L0sq=L[0]*L[0]+L[1]*L[1]+L[2]*L[2];S.E0=energy(L);
+  S.mode='run';S.paused=false;clearTrail();setOrbit(L);syncUI();}
+function resetPick(){S.mode='pick';S.paused=false;if(S.qPick)bookRoot.quaternion.copy(S.qPick);clearTrail();S.hist=[];S.t=0;syncUI();refreshPick();}
+function refreshPick(){if(S.mode!=='pick')return;const L=pickL();setOrbit(L);setHead(L);}
+function syncUI(){const run=S.mode==='run';$('#modeTag').textContent=run?(S.paused?'Paused':'In the air'):'Orienting';$('#modeTag').classList.toggle('run',run);
+  $('#pauseBtn').disabled=!run;$('#pauseBtn').textContent=S.paused?'Resume':'Pause';$('#tossBtn').textContent=run?'Toss again':'Toss';
+  $('#bookHint').textContent=run?'Reset to re-orient the book':'Drag to orient · spin axis is fixed and parallel to the floor';
+  $('#tossState').textContent=run?'in flight':'prediction';$('#bookView').style.cursor=run?'default':'';}
+
+/* ---------- pointer: book ---------- */
+(function(){const el=$('#bookView');let drag=null;
+  el.addEventListener('pointerdown',e=>{if(S.mode!=='pick')return;drag={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
+    const len=Math.hypot(dx,dy);if(!len)return;const ax=new THREE.Vector3(dy,dx,0).normalize().applyQuaternion(bC.quaternion);
+    bookRoot.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(ax,len*0.009));refreshPick();});
+  const end=()=>{drag=null;};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);})();
+/* ---------- pointer: sphere ---------- */
+(function(){const el=$('#sphereView');let drag=null;
+  el.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};
+    cam.az-=dx*0.008;cam.el=Math.max(-1.35,Math.min(1.35,cam.el+dy*0.008));cam.lastUser=performance.now();placeCam();});
+  const end=()=>{drag=null;};el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);})();
+
+/* ---------- controls ---------- */
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{lastPreset=+b.dataset.axis;if(S.mode==='run')S.mode='pick';preset(lastPreset);toss();}));
+function bindRange(id,fmt,fn){const el=$('#'+id),out=$('#'+id+'Out');const f=()=>{out.textContent=fmt(+el.value);fn(+el.value);};el.addEventListener('input',f);out.textContent=fmt(+el.value);}
+bindRange('wobble',v=>v+'°',v=>{S.wobble=v;});
+bindRange('w0',v=>v.toFixed(1)+' rad/s',v=>{S.w0=v;refreshPick();});
+bindRange('speed',v=>v.toFixed(1)+'×',v=>{S.speed=v;});
+function dimsChanged(){let x=+$('#dx').value,y=+$('#dy').value,z=+$('#dz').value;
+  if(y<x+0.15){y=x+0.15;$('#dy').value=y;}if(z<y+0.15){z=y+0.15;$('#dz').value=z;}if(y>z-0.15){y=z-0.15;$('#dy').value=y;}if(x>y-0.15){x=y-0.15;$('#dx').value=x;}
+  S.dims={x,y,z};['dx','dy','dz'].forEach((id,i)=>$('#'+id+'Out').textContent=[x,y,z][i].toFixed(2));
+  computeI();layoutBook();buildPolhodes();updateIInfo();
+  if(S.mode==='run'){S.mode='pick';if(S.qPick)bookRoot.quaternion.copy(S.qPick);clearTrail();S.hist=[];syncUI();}refreshPick();}
+['dx','dy','dz'].forEach(id=>$('#'+id).addEventListener('input',dimsChanged));
+$('#tossBtn').addEventListener('click',()=>{if(S.mode==='run'&&S.qPick)bookRoot.quaternion.copy(S.qPick);S.mode='pick';toss();});
+$('#pauseBtn').addEventListener('click',()=>{S.paused=!S.paused;syncUI();});
+$('#resetBtn').addEventListener('click',resetPick);
+
+function updateIInfo(){const [a,b,c]=S.I;$('#Ix').textContent=a.toFixed(2);$('#Iy').textContent=b.toFixed(2);$('#Iz').textContent=c.toFixed(2);
+  const dX=-((c-a)/(a*c))*((a-b)/(a*b)),dY=-((b-c)/(b*c))*((a-b)/(a*b)),dZ=-((b-c)/(b*c))*((c-a)/(a*c));
+  const f=v=>(v>0?'+':'−')+Math.abs(v).toExponential(2);$('#dX').textContent=f(dX);$('#dY').textContent=f(dY);$('#dZ').textContent=f(dZ);
+  const sp=(1/b-1/a)/(1/c-1/a)*100;$('#gSep').style.left=sp+'%';const gl=$('#gSepLbl');gl.style.position='absolute';gl.style.left=sp+'%';gl.style.transform='translateX(-50%)';}
+
+/* ---------- readouts ---------- */
+function readout(L,wvec){const n=norm(L);const e=2*energy(L)/(n*n);const [I1,I2,I3]=S.I;
+  const pos=(e-1/I1)/(1/I3-1/I1),sep=(1/I2-1/I1)/(1/I3-1/I1);$('#gDot').style.left=(Math.max(0,Math.min(1,pos))*100)+'%';
+  const near=Math.abs(pos-sep)<0.035;let v,o;
+  if(near){v='Hugging the separatrix. It starts near the <i>l<sub>y</sub></i> saddle, so the book flips end over end and back again.';o='near separatrix';}
+  else if(e<1/I2){const s=L[0]>=0?'+':'−';v=`Loops around ${s}<i>l<sub>x</sub></i>, the largest moment. A center: the spin wobbles but never flips.`;o='around '+s+'lx (center)';}
+  else{const s=L[2]>=0?'+':'−';v=`Loops around ${s}<i>l<sub>z</sub></i>, the smallest moment. A center: the spin wobbles but never flips.`;o='around '+s+'lz (center)';}
+  $('#verdict').innerHTML=v;$('#orbitOut').textContent=o;
+  $('#sL').textContent=L.map(c=>(c/n>=0?' ':'−')+Math.abs(c/n).toFixed(2)).join(' ');
+  const ang=Math.acos(Math.max(-1,Math.min(1,(L[0]*wvec[0]+L[1]*wvec[1]+L[2]*wvec[2])/(n*norm(wvec)))))*180/Math.PI;
+  $('#sA').textContent=ang.toFixed(1)+'°';$('#sLm').textContent=n.toFixed(2);$('#sE').textContent=energy(L).toFixed(3);return ang;}
+
+/* ---------- charts ---------- */
+const W=14;
+function drawChart(cv,yMin,yMax,ticks,series,emptyMsg){const dpr=Math.min(devicePixelRatio,2);const r=cv.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const padL=34,padR=6,padT=6,padB=18;const pw=w-padL-padR,ph=h-padT-padB;
+  const yp=v=>padT+(1-(v-yMin)/(yMax-yMin))*ph;
+  g.font='10px "IBM Plex Mono", ui-monospace, monospace';g.textBaseline='middle';
+  for(const t of ticks){const y=yp(t);g.strokeStyle=t===0?'#2e3e64':CSSC.line;g.lineWidth=1;g.beginPath();g.moveTo(padL,y);g.lineTo(w-padR,y);g.stroke();g.fillStyle=CSSC.muted;g.textAlign='right';g.fillText(String(t),padL-6,y);}
+  const H=S.hist;const tEnd=Math.max(W,S.t),t0=tEnd-W;const xp=t=>padL+(t-t0)/W*pw;
+  g.textAlign='center';g.textBaseline='alphabetic';g.fillStyle=CSSC.faint;for(let s=Math.ceil(t0/2)*2;s<=tEnd;s+=2){g.fillText(s+'s',xp(s),h-4);}
+  if(!H.length){g.fillStyle=CSSC.muted;g.font='12px "IBM Plex Sans", system-ui, sans-serif';g.fillText(emptyMsg,padL+pw/2,padT+ph/2);return;}
+  g.save();g.beginPath();g.rect(padL,padT,pw,ph);g.clip();
+  for(const s of series){g.strokeStyle=s.color;g.lineWidth=1.6;g.lineJoin='round';g.beginPath();let st=false;
+    for(const p of H){if(p.t<t0)continue;const x=xp(p.t),y=yp(Math.max(yMin-1,Math.min(yMax+1,s.get(p))));if(!st){g.moveTo(x,y);st=true;}else g.lineTo(x,y);}g.stroke();
+    const last=H[H.length-1];g.fillStyle=s.color;g.beginPath();g.arc(xp(last.t),yp(s.get(last)),3,0,Math.PI*2);g.fill();}
+  g.restore();}
+function drawCharts(){const msg='Toss the book to record';
+  drawChart($('#chL'),-1,1,[-1,-0.5,0,0.5,1],[{color:CSSC.teal,get:p=>p.lx},{color:CSSC.rose,get:p=>p.ly},{color:CSSC.violet,get:p=>p.lz}],msg);
+  let mx=10;for(const p of S.hist)if(p.ang>mx)mx=p.ang;mx=Math.ceil(mx/10)*10;
+  drawChart($('#chA'),0,mx,[0,mx/2,mx],[{color:CSSC.cyan,get:p=>p.ang}],msg);
+  drawChart($('#chC'),-2,2,[-2,-1,0,1,2],[{color:CSSC.amber,get:p=>p.dL*1e6},{color:CSSC.cyan,get:p=>p.dE*1e6}],msg);}
+
+/* ---------- loop ---------- */
+let prev=performance.now();
+function frame(now){const dt=Math.min(0.05,(now-prev)/1000);prev=now;
+  if(!reduceMotion&&now-cam.lastUser>2500){cam.az+=dt*0.07;placeCam();}
+  let Lb,wb;
+  if(S.mode==='run'){
+    if(!S.paused){const T=dt*S.speed;const n=Math.max(1,Math.ceil(T/0.002));const h=T/n;for(let i=0;i<n;i++)S.state=rk4(S.state,h);S.t+=T;}
+    const s=S.state;Lb=[s[0],s[1],s[2]];const q=[s[3],s[4],s[5],s[6]];bookRoot.quaternion.set(q[1],q[2],q[3],q[0]);
+    wb=[Lb[0]/S.I[0],Lb[1]/S.I[1],Lb[2]/S.I[2]];
+    const wW=qrot(q,wb),LW=qrot(q,Lb);wArrow.set(wW,Math.min(3.4,1.4+1.6*norm(wW)/S.w0));LArrow.set(LW,2.9);
+    const ang=readout(Lb,wb);
+    if(!S.paused){const n2=Lb[0]*Lb[0]+Lb[1]*Lb[1]+Lb[2]*Lb[2],nn=Math.sqrt(n2);
+      S.hist.push({t:S.t,lx:Lb[0]/nn,ly:Lb[1]/nn,lz:Lb[2]/nn,ang,dL:(n2-S.L0sq)/S.L0sq,dE:(energy(Lb)-S.E0)/S.E0});
+      while(S.hist.length&&S.hist[0].t<S.t-W-1)S.hist.shift();pushTrail(Lb);}
+    setHead(Lb);
+  }else{
+    Lb=pickL();const q=tq2a(bookRoot.quaternion);wb=qrot(qconj(q),[S.w0,0,0]);
+    wArrow.set([1,0,0],3);LArrow.set(qrot(q,Lb),2.9);readout(Lb,wb);setHead(Lb);
+  }
+  $('#tOut').textContent=S.t.toFixed(2);
+  drawCharts();bR.render(bS,bC);sR.render(sS,sC);requestAnimationFrame(frame);}
+
+/* ---------- init ---------- */
+computeI();layoutBook();buildPolhodes();updateIInfo();placeCam();onResize();
+preset(1);toss();syncUI();
+requestAnimationFrame(frame);
+}
+Promise.race([document.fonts?document.fonts.ready:Promise.resolve(),new Promise(r=>setTimeout(r,1500))]).then(startLab);
+</script>
+
+</body></html>

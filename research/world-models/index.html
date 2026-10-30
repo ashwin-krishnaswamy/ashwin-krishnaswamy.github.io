@@ -20,45 +20,44 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--ink);color:var(--fg)}
-body{font-family:var(--body);line-height:1.6;padding:64px 16px 64px}
+body{font-family:var(--body);line-height:1.55;padding:60px 16px 32px}
 a{color:inherit}
-.wrap{max-width:860px;margin:0 auto;display:grid;gap:48px}
 
-header{display:grid;gap:14px}
+/* One screen on desktop: text column | media column */
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:32px;align-items:start}
+@media (min-width:960px){.wrap{grid-template-columns:1.05fr 1fr;gap:40px}}
+
+.text{display:grid;gap:18px}
+header{display:grid;gap:10px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-h1{font-family:var(--display);font-weight:400;font-style:italic;font-size:clamp(34px,5.5vw,56px);line-height:1.05;margin:0;letter-spacing:-.01em}
+h1{font-family:var(--display);font-weight:400;font-style:italic;font-size:clamp(32px,4vw,48px);line-height:1.05;margin:0;letter-spacing:-.01em}
 h1 em{font-style:normal;color:var(--amber)}
-header p{margin:0;color:var(--muted);font-size:16px;max-width:66ch}
-header p b{color:var(--fg);font-weight:500}
 .byline{font-size:14px;color:var(--fg)}
+header p{margin:0;color:var(--muted);font-size:15px}
+header p b{color:var(--fg);font-weight:500}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 
-section h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 16px;display:flex;align-items:center;gap:12px}
-section h2::after{content:"";flex:1;height:1px;background:var(--line)}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 12px;display:flex;align-items:center;gap:12px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
 
-figure{margin:0;display:grid;gap:10px}
-figcaption{font-size:13px;color:var(--muted)}
-figcaption b{color:var(--fg);font-weight:500}
-.frame{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.frame video{display:block;width:100%;height:auto;aspect-ratio:5/3}
-.paper{background:#fff;border-radius:14px;padding:18px 16px 12px}
-.paper img{display:block;width:100%;height:auto}
-.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
-.pair .paper{padding:8px}
-.pair span{display:block;font-family:var(--mono);font-size:11px;color:#5a6684;text-align:center;padding-top:4px}
-
-.result{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px}
-.result .num{font-family:var(--display);font-size:40px;line-height:1;color:var(--amber)}
-.result .lbl{font-size:14px;color:var(--muted)}
-
-ul.what{margin:0;padding:0;list-style:none;display:grid;gap:14px}
-ul.what li{position:relative;padding-left:22px;font-size:15.5px}
-ul.what li::before{content:"";position:absolute;left:2px;top:.62em;width:8px;height:8px;border-radius:2px;background:var(--teal)}
+ul.what{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+ul.what li{position:relative;padding-left:20px;font-size:15px}
+ul.what li::before{content:"";position:absolute;left:2px;top:.6em;width:8px;height:8px;border-radius:2px;background:var(--teal)}
 ul.what b{font-weight:600}
 code{font-family:var(--mono);font-size:.88em;background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
 
-footer{font-size:12px;color:var(--faint);font-family:var(--mono)}
+.media{display:grid;gap:18px}
+figure{margin:0;display:grid;gap:8px}
+figcaption{font-size:13px;color:var(--muted)}
+figcaption b{color:var(--fg);font-weight:500}
+.frame{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.frame video{display:block;width:100%;height:auto;aspect-ratio:5/3}
+.stat{position:absolute;left:12px;bottom:12px;display:flex;align-items:baseline;gap:8px;padding:6px 12px;border-radius:10px;background:rgba(10,15,28,.85)}
+.stat .num{font-family:var(--display);font-size:26px;line-height:1;color:var(--amber)}
+.stat .lbl{font-size:12px;color:var(--fg)}
+.paper{background:#fff;border-radius:14px;padding:14px 14px 10px}
+.paper img{display:block;width:100%;height:auto}
 </style>
 </head>
 <body>
@@ -73,53 +72,40 @@ footer{font-size:12px;color:var(--faint);font-family:var(--mono)}
 
 <div class="wrap">
 
-  <header>
-    <div class="eyebrow">Research · University of Washington WEIRD Lab · Summer 2026</div>
-    <h1>Cross-Modal Latent <em>World Models</em></h1>
-    <div class="byline">Mentored by Chuning Zhu</div>
-    <p>Robots that plan with a world model usually predict either <b>future pixels</b>, which wastes effort on lighting and texture, or <b>future language</b> through a large vision-language model, which is too slow to score thousands of candidate plans. The goal of this project was to get the best of both: a model that predicts only the <b>task-relevant facts</b> about the future (“the green block is touching the blue block”) in a compact latent space, so a planner can chase a natural-language goal without ever decoding text.</p>
-    <div class="tags"><span class="tag">world models</span><span class="tag">contrastive learning</span><span class="tag">MPPI control</span><span class="tag">CLIP</span><span class="tag">PyBullet</span><span class="tag">Python</span></div>
-  </header>
+  <div class="text">
+    <header>
+      <div class="eyebrow">Research · UW WEIRD Lab · Summer 2026</div>
+      <h1>Cross-Modal Latent <em>World Models</em></h1>
+      <div class="byline">Mentored by Chuning Zhu</div>
+      <p><b>Goal:</b> a robot world model that predicts only task-relevant future facts in a compact latent space, so a planner can reach natural-language goals without generating pixels or text.</p>
+      <div class="tags"><span class="tag">world models</span><span class="tag">contrastive learning</span><span class="tag">MPPI control</span><span class="tag">CLIP</span><span class="tag">PyBullet</span><span class="tag">Python</span></div>
+    </header>
 
-  <section>
-    <h2>It works</h2>
+    <section>
+      <h2>What I did</h2>
+      <ul class="what">
+        <li><b>Designed the model.</b> A CLIP image encoder embeds the camera frame, and an MLP conditioned on a candidate action sequence predicts the CLIP text embedding of what will be true <code>H</code> steps later.</li>
+        <li><b>Built the training pipeline.</b> Turned expert and random-exploration rollouts into (frame, action sequence, future frame) samples with auto-generated true/false statements, then trained the model contrastively to pick out the true one.</li>
+        <li><b>Planned with MPPI.</b> Sampled candidate action sequences, scored each against the embedded goal sentence, and tuned the planner, raising task success from 0% to 60%.</li>
+        <li><b>Analyzed the model.</b> Trained 3B+ parameter models; t-SNE/UMAP and linear probes showed the latents encode task facts like block contact.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="media">
     <figure>
       <div class="frame">
         <video src="media/rollout.mp4" poster="media/rollout-poster.jpg" autoplay muted loop playsinline aria-label="Simulated robot arm pushing a green block until it touches a blue block"></video>
+        <div class="stat"><span class="num">0% → 60%</span><span class="lbl">task success</span></div>
       </div>
-      <figcaption><b>Planner rollout in simulation.</b> Given only the goal sentence, the robot pushes the green block until it touches the blue one. Every action is chosen by searching in the model's latent space.</figcaption>
+      <figcaption><b>Planner rollout.</b> Given only the goal sentence, the robot pushes the green block to the blue one.</figcaption>
     </figure>
-    <div class="result"><span class="num">0% → 60%</span><span class="lbl">task success rate in PyBullet simulation</span></div>
-  </section>
+    <figure>
+      <div class="paper"><img src="media/model-diagram.png" alt="Diagram: the camera frame at time t goes through an image encoder, then an MLP together with a candidate action sequence, producing a predicted latent for time t+H. That latent is compared with the text-encoder embedding of the goal sentence."></div>
+      <figcaption><b>Model.</b> Frame + actions → predicted latent, compared with the goal sentence’s embedding.</figcaption>
+    </figure>
+  </div>
 
-  <section>
-    <h2>What I did</h2>
-    <ul class="what">
-      <li><b>Designed the world model.</b> A CLIP image encoder embeds the current camera frame, and an MLP conditioned on a candidate action sequence predicts the CLIP <i>text</i> embedding of what will be true <code>H</code> steps later. I simplified the original proposal’s step-by-step latent dynamics into this direct multi-step prediction.</li>
-      <li><b>Trained it contrastively on language.</b> I wrote a Python pipeline that turns expert simulation rollouts into (frame, action sequence, future frame) samples, labels each with a true future statement and several false ones (“Block A is touching Block B…”), and trains the model to pick out the true one. I later added random-exploration data so the model learned what happens when the robot drifts off course.</li>
-      <li><b>Planned in latent space with MPPI.</b> I implemented model predictive path integral control, which samples hundreds of action sequences, scores each by how closely its predicted future matches the encoded goal sentence, and executes the best one. Tuning the planner (iterations, temperature) mattered as much as the model, and together they took task success from 0% to 60%.</li>
-      <li><b>Checked what the model learned.</b> I trained models with 3B+ parameters and analyzed the embeddings with t-SNE/UMAP and linear probes, which confirmed that the predicted latents encode task facts like whether two blocks are touching.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Under the hood</h2>
-    <div style="display:grid;gap:32px">
-      <figure>
-        <div class="paper"><img src="media/model-diagram.png" alt="Diagram: the camera frame at time t goes through an image encoder, then an MLP together with a candidate action sequence, producing a predicted latent for time t+H. That latent is compared with the text-encoder embedding of the goal sentence." loading="lazy"></div>
-        <figcaption><b>Model.</b> Frame + candidate actions → predicted future latent, which is compared directly against the embedded goal sentence. No pixels or text are generated during planning.</figcaption>
-      </figure>
-      <figure>
-        <div class="pair">
-          <div class="paper"><img src="media/tsne-before.png" alt="t-SNE of text embeddings before training: touching and not-touching statements are mixed together in every cluster." loading="lazy"><span>before training</span></div>
-          <div class="paper"><img src="media/tsne-after.png" alt="t-SNE of text embeddings after 12 epochs: touching and not-touching statements form clearly separate clusters." loading="lazy"><span>after 12 epochs</span></div>
-        </div>
-        <figcaption><b>The embedding space learns what matters.</b> At first, “touching” (blue) and “not touching” (red) statements sit on top of each other. After training they split apart, so the planner can tell success from failure.</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <footer>© 2026 Ashwin Krishnaswamy · <a href="../../">Home</a></footer>
 </div>
 </body>
 </html>

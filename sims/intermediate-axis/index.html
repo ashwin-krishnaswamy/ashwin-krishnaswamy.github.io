@@ -15,7 +15,7 @@
   color-scheme: dark;
 }
 html,body{background:var(--ink);color:var(--fg)}
-body{font-family:var(--body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+body{font-family:var(--body);line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:64px 48px}
 .wrap{max-width:1300px;margin:0 auto;display:grid;gap:20px}
 header{display:grid;gap:6px;max-width:72ch}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
@@ -102,6 +102,15 @@ td.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .dimgrid{display:grid;gap:10px}
 footer{font-size:12px;color:var(--faint)}
 </style>
+
+<!-- Return-to-home button: same fixed spot on every subpage; hidden inside homepage preview iframes -->
+<script>if(window.self!==window.top)document.documentElement.classList.add('framed')</script>
+<style>
+.home-btn{position:fixed;top:14px;left:max(14px,env(safe-area-inset-left,0px));z-index:1000;display:inline-flex;align-items:center;gap:6px;font:500 12px/1 "IBM Plex Mono",ui-monospace,Menlo,monospace;color:#e7eaf3;text-decoration:none;padding:8px 12px;border:1px solid #22304f;border-radius:999px;background:rgba(15,23,41,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.home-btn:hover{border-color:#8a96b3}
+.framed .home-btn{display:none}
+</style>
+<a class="home-btn" href="../../">← Home</a>
 
 <div class="wrap">
   <header>
